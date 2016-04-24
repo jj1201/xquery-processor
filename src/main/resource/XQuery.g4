@@ -5,42 +5,39 @@ grammar XQuery;
 
 /* Absoluate Path */
 ap
-    :   'doc' '(' file_name ')' '/' rp
-    |   'doc' '(' file_name ')' '//' rp
+    :   'doc' '(' file_name ')' '/' rp          # DocSlashRp
+    |   'doc' '(' file_name ')' '//' rp         # DocSlashSlashRp
     ;
 
 /* Relative Path */
 rp
-    :   tag_name
-    |   '*'
-    |   '.'
-    |   '..'
-    |   'text()'
-    |   '@' att_name
-    |   '(' rp ')'
-    |   rp '/' rp
-    |   rp '//' rp
-    |   rp '[' f ']'
-    |   rp ',' rp
+    :   tag_name                                # TagName
+    |   '*'                                     # Star
+    |   '.'                                     # Dot
+    |   '..'                                    # DoubleDot
+    |   'text()'                                # Text
+    |   '@' att_name                            # AttName
+    |   '(' rp ')'                              # ParenthesisRp
+    |   rp '/' rp                               # RpSlashRp
+    |   rp '//' rp                              # RpSlashSlashRp
+    |   rp '[' f ']'                            # RpWithFilter
+    |   rp ',' rp                               # RpCommaRp
     ;
 
 /* Path Filter */
 f
-    :   rp
-    |   rp '=' rp
-    |   rp 'eq' rp
-    |   rp '==' rp
-    |   rp 'is' rp
-    |   '(' f ')'
-    |   f 'and' f
-    |   f 'or' f
-    |   'not' f
+    :   rp                                      # RpFilter
+    |   rp ('='|'eq') rp                        # ValueEqualFilter
+    |   rp ('=='|'is') rp                       # IDEqualFilter
+    |   '(' f ')'                               # ParenthesisFilter
+    |   f 'and' f                               # AndFilter
+    |   f 'or' f                                # OrFilter
+    |   'not' f                                 # NotFilter
     ;
-
 
 /* File Name (Not perfect, just a course one) */
 file_name
-    :   STRING ('.' STRING)*
+    :   STRING ('.' STRING)* ('/' STRING ('.' STRING)*)*
     ;
 
 /* Tag Name (Not perfect, just a course one) */
