@@ -11,6 +11,168 @@ import org.antlr.v4.runtime.tree.ParseTreeVisitor;
  */
 public interface XQueryVisitor<T> extends ParseTreeVisitor<T> {
 	/**
+	 * Visit a parse tree produced by the {@code VarAsXq}
+	 * labeled alternative in {@link XQueryParser#xq}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitVarAsXq(XQueryParser.VarAsXqContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code FLWR}
+	 * labeled alternative in {@link XQueryParser#xq}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitFLWR(XQueryParser.FLWRContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code TagNameXq}
+	 * labeled alternative in {@link XQueryParser#xq}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitTagNameXq(XQueryParser.TagNameXqContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ParenthesisXq}
+	 * labeled alternative in {@link XQueryParser#xq}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitParenthesisXq(XQueryParser.ParenthesisXqContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code XqSlashSlashRp}
+	 * labeled alternative in {@link XQueryParser#xq}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitXqSlashSlashRp(XQueryParser.XqSlashSlashRpContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code LetXq}
+	 * labeled alternative in {@link XQueryParser#xq}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitLetXq(XQueryParser.LetXqContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code StringAsXq}
+	 * labeled alternative in {@link XQueryParser#xq}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitStringAsXq(XQueryParser.StringAsXqContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code XqSlashRp}
+	 * labeled alternative in {@link XQueryParser#xq}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitXqSlashRp(XQueryParser.XqSlashRpContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code XqCommaXq}
+	 * labeled alternative in {@link XQueryParser#xq}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitXqCommaXq(XQueryParser.XqCommaXqContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ApAsXq}
+	 * labeled alternative in {@link XQueryParser#xq}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitApAsXq(XQueryParser.ApAsXqContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link XQueryParser#var}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitVar(XQueryParser.VarContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link XQueryParser#ffor}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitFfor(XQueryParser.FforContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link XQueryParser#let}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitLet(XQueryParser.LetContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link XQueryParser#where}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitWhere(XQueryParser.WhereContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link XQueryParser#ret}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitRet(XQueryParser.RetContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code XqValueEqualCond}
+	 * labeled alternative in {@link XQueryParser#cond}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitXqValueEqualCond(XQueryParser.XqValueEqualCondContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code OrCond}
+	 * labeled alternative in {@link XQueryParser#cond}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitOrCond(XQueryParser.OrCondContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code XqIdEqualCond}
+	 * labeled alternative in {@link XQueryParser#cond}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitXqIdEqualCond(XQueryParser.XqIdEqualCondContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code AndCond}
+	 * labeled alternative in {@link XQueryParser#cond}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitAndCond(XQueryParser.AndCondContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code XqSomeCond}
+	 * labeled alternative in {@link XQueryParser#cond}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitXqSomeCond(XQueryParser.XqSomeCondContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code NotCond}
+	 * labeled alternative in {@link XQueryParser#cond}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitNotCond(XQueryParser.NotCondContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code XqEmptyCOnd}
+	 * labeled alternative in {@link XQueryParser#cond}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitXqEmptyCOnd(XQueryParser.XqEmptyCOndContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ParenthesisCond}
+	 * labeled alternative in {@link XQueryParser#cond}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitParenthesisCond(XQueryParser.ParenthesisCondContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link XQueryParser#var_in_xq}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitVar_in_xq(XQueryParser.Var_in_xqContext ctx);
+	/**
 	 * Visit a parse tree produced by the {@code DocSlashRp}
 	 * labeled alternative in {@link XQueryParser#ap}.
 	 * @param ctx the parse tree
@@ -116,13 +278,6 @@ public interface XQueryVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitIDEqualFilter(XQueryParser.IDEqualFilterContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code IsFilter}
-	 * labeled alternative in {@link XQueryParser#f}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitIsFilter(XQueryParser.IsFilterContext ctx);
-	/**
 	 * Visit a parse tree produced by the {@code NotFilter}
 	 * labeled alternative in {@link XQueryParser#f}.
 	 * @param ctx the parse tree
@@ -175,4 +330,10 @@ public interface XQueryVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitAtt_name(XQueryParser.Att_nameContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link XQueryParser#str_const}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitStr_const(XQueryParser.Str_constContext ctx);
 }

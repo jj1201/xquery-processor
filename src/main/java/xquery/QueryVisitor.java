@@ -23,6 +23,7 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
     public static boolean debugOn = false;
 
     private LinkedList<QueryList> stack = new LinkedList<>();
+    private VariableContext varContext= new VariableContext();
 
     private void debug(ParserRuleContext ctx) {
         if (!debugOn) return;
@@ -30,28 +31,84 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
         for (QueryList list : stack) {
             System.out.println("State : " + list);
         }
+        System.out.println("Var:" + varContext);
     }
 
-    private QueryList rp(QueryList queryList, RuleNode ruleNode) {
+    /*
+     *  Helper Methods for XPath
+     *
+     */
+
+    private QueryList visitNode(QueryList queryList, RuleNode ruleNode) {
         stack.push(queryList);
         QueryList res = visit(ruleNode);
         stack.pop();
         return res;
     }
 
-    private QueryList rprp(QueryList queryList, RuleNode ruleNode) {
+    private QueryList visitDescendant(QueryList queryList, RuleNode ruleNode) {
         if (queryList.size() == 0) return new QueryList();
         QueryList res = new QueryList();
         // DFS
         for (Node node : queryList) {
             QueryList tmpContext = new QueryList();
             tmpContext.add(node);
-            QueryList rpSlashRp = rp(tmpContext, ruleNode);
-            QueryList rpSlashSlashRp = rprp(tmpContext.children(), ruleNode);
+            QueryList rpSlashRp = visitNode(tmpContext, ruleNode);
+            QueryList rpSlashSlashRp = visitDescendant(tmpContext.children(), ruleNode);
             res = res.union(rpSlashRp).union(rpSlashSlashRp);
         }
         return res;
     }
+
+    /*
+     *  Visitor functions for "xq" (XQuery)
+     *
+     */
+
+    @Override public QueryList visitVarAsXq(XQueryParser.VarAsXqContext ctx) {
+        debug(ctx);
+
+        RuleNode varValue = varContext.getVar(ctx.var().getText());
+        QueryList res = visitNode(stack.peek(), varValue);
+
+        return res;
+    }
+
+    @Override public QueryList visitXqSlashRp(XQueryParser.XqSlashRpContext ctx) {
+        debug(ctx);
+
+        QueryList res1 = visitNode(stack.peek(), ctx.xq());
+        QueryList res2 = visitNode(res1, ctx.rp());
+
+        return res2;
+    }
+
+    @Override public QueryList visitLetXq(XQueryParser.LetXqContext ctx) {
+        debug(ctx);
+
+        varContext.pushContext();
+        visitNode(null, ctx.let());
+        QueryList res = visitNode(stack.peek(), ctx.xq());
+        varContext.popContext();
+
+        return res;
+    }
+
+    /*
+     *  Visitor functions for "let" (letClause)
+     *
+     */
+
+    @Override public QueryList visitLet(XQueryParser.LetContext ctx) {
+        debug(ctx);
+
+        int length = ctx.var().size();
+        for (int i=0; i<length; i++) {
+            varContext.putVar(ctx.var(i).getText(), ctx.xq(i));
+        }
+        return null;
+    }
+
 
     /*
      *  Visitor functions for "ap" (absolute path)
@@ -76,7 +133,7 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
         QueryList context = new QueryList();
         context.add(doc);
 
-        return rp(context, ctx.rp());
+        return visitNode(context, ctx.rp());
     }
 
     @Override public QueryList visitDocSlashSlashRp(XQueryParser.DocSlashSlashRpContext ctx) {
@@ -97,7 +154,7 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
         QueryList context = new QueryList();
         context.add(doc);
 
-        return rprp(context, ctx.rp());
+        return visitDescendant(context, ctx.rp());
     }
 
     /*
@@ -108,8 +165,8 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
     @Override public QueryList visitRpSlashRp(XQueryParser.RpSlashRpContext ctx) {
         debug(ctx);
 
-        QueryList res1 = rp(stack.peek(), ctx.rp(0));
-        QueryList res2 = rp(res1, ctx.rp(1));
+        QueryList res1 = visitNode(stack.peek(), ctx.rp(0));
+        QueryList res2 = visitNode(res1, ctx.rp(1));
 
         return res2;
     }
@@ -117,8 +174,8 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
     @Override public QueryList visitRpSlashSlashRp(XQueryParser.RpSlashSlashRpContext ctx) {
         debug(ctx);
 
-        QueryList midState = rp(stack.peek(), ctx.rp(0));
-        QueryList res = rprp(midState, ctx.rp(1));
+        QueryList midState = visitNode(stack.peek(), ctx.rp(0));
+        QueryList res = visitDescendant(midState, ctx.rp(1));
 
         return res;
     }
@@ -159,8 +216,8 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
     @Override public QueryList visitRpWithFilter(XQueryParser.RpWithFilterContext ctx) {
         debug(ctx);
 
-        QueryList res1 = rp(stack.peek(), ctx.rp());
-        QueryList res2 = rp(res1, ctx.f());
+        QueryList res1 = visitNode(stack.peek(), ctx.rp());
+        QueryList res2 = visitNode(res1, ctx.f());
 
         return res2;
     }
@@ -177,7 +234,7 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
         for (Node node : stack.peek()) {
             QueryList tmpContext = new QueryList();
             tmpContext.add(node);
-            if (!rp(tmpContext, ctx.rp()).isEmpty()) {
+            if (!visitNode(tmpContext, ctx.rp()).isEmpty()) {
                 res.add(node);
             }
         }
@@ -191,8 +248,8 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
         for (Node node : stack.peek()) {
             QueryList tmpContext = new QueryList();
             tmpContext.add(node);
-            QueryList res1 = rp(tmpContext, ctx.rp(0));
-            QueryList res2 = rp(tmpContext, ctx.rp(1));
+            QueryList res1 = visitNode(tmpContext, ctx.rp(0));
+            QueryList res2 = visitNode(tmpContext, ctx.rp(1));
             if (!res1.valueIntersect(res2).isEmpty()) {
                 res.add(node);
             }

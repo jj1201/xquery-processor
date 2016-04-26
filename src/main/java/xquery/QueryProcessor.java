@@ -14,15 +14,18 @@ public class QueryProcessor {
 
     private static String fpath = "src/main/resource/test.xml";
     private static String rpath = "/bookstore[book/author = ebook/author]/./*";
+    private static String query =
+                    "let $moe := doc(src/main/resource/test.xml)/.\n" +
+                    "$moe/bookstore[book/author = ebook/author]/./*";
 
     public static NodeList evaluate(String fp, String rp) {
-        String query = "doc(" + fp + ")" + rp;
+        String query = fp + rp ; //"doc(" + fp + ")" + rp;
         // Init ANTLR
         ANTLRInputStream inputStream = new ANTLRInputStream(query);
         XQueryLexer lexer = new XQueryLexer(inputStream);
         CommonTokenStream tokenStream = new CommonTokenStream(lexer);
         XQueryParser parser = new XQueryParser(tokenStream);
-        ParseTree tree = parser.ap();
+        ParseTree tree = parser.xq();
 
         // Visit
         QueryVisitor visitor = new QueryVisitor();
@@ -70,7 +73,7 @@ public class QueryProcessor {
 
     public static void main( String[] args ) throws  Exception{
 
-        NodeList myRes = evaluate(fpath, rpath);
+        NodeList myRes = evaluate(query, "" /*fpath, rpath*/);
 
         NodeList stdRes = stdEvaluate(fpath, rpath);
 
