@@ -11,21 +11,21 @@ import java.util.Map;
  */
 public class VariableContext {
 
-    private LinkedList<Map<String, RuleNode>> stack = new LinkedList<>();
+    private LinkedList<Map<String, QueryList>> stack = new LinkedList<>();
 
     /*
      *  Basic stack methods
      */
 
     public void pushContext() {
-        stack.push(new HashMap<String, RuleNode>());
+        stack.push(new HashMap<String, QueryList>());
     }
 
     public void popContext() {
         stack.pop();
     }
 
-    public Map<String, RuleNode> peek() {
+    public Map<String, QueryList> peek() {
         return stack.peek();
     }
 
@@ -33,13 +33,11 @@ public class VariableContext {
      *  Variable Related methods
      */
 
-    public void putVar(String name, RuleNode xq) {
-        stack.peek().put(name, xq);
-    }
+    public void putVar(String name, QueryList xq) {stack.peek().put(name, xq);}
 
-    public RuleNode getVar(String name) {
+    public QueryList getVar(String name) {
         for(int i=stack.size()-1; i>=0; i--) {
-            Map<String, RuleNode> context = stack.get(i);
+            Map<String, QueryList> context = stack.get(i);
             if (context.containsKey(name)) {
                 return context.get(name);
             }
@@ -54,7 +52,7 @@ public class VariableContext {
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        for(Map<String, RuleNode> context : stack) {
+        for(Map<String, QueryList> context : stack) {
             builder.append("[ ");
             for (String name : context.keySet()) {
                 builder.append(name + "-" + context.get(name) + ";");

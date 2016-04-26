@@ -15,8 +15,8 @@ public class QueryProcessor {
     private static String fpath = "src/main/resource/test.xml";
     private static String rpath = "/bookstore[book/author = ebook/author]/./*";
     private static String query =
-                    "let $moe := doc(src/main/resource/test.xml)/.\n" +
-                    "$moe/bookstore[book/author = ebook/author]/./*";
+                        "let $moe := doc(src/main/resource/test.xml)/.\n" +
+                        "$moe/bookstore[book/author = ebook/author]/./*";
 
     public static NodeList evaluate(String fp, String rp) {
         String query = fp + rp ; //"doc(" + fp + ")" + rp;

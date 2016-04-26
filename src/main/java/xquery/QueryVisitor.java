@@ -68,10 +68,7 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
     @Override public QueryList visitVarAsXq(XQueryParser.VarAsXqContext ctx) {
         debug(ctx);
 
-        RuleNode varValue = varContext.getVar(ctx.var().getText());
-        QueryList res = visitNode(stack.peek(), varValue);
-
-        return res;
+        return varContext.getVar(ctx.var().getText());
     }
 
     @Override public QueryList visitXqSlashRp(XQueryParser.XqSlashRpContext ctx) {
@@ -104,7 +101,8 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
 
         int length = ctx.var().size();
         for (int i=0; i<length; i++) {
-            varContext.putVar(ctx.var(i).getText(), ctx.xq(i));
+            QueryList varValue = visitNode(stack.peek(), ctx.xq(i));
+            varContext.putVar(ctx.var(i).getText(), varValue);
         }
         return null;
     }
