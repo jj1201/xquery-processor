@@ -5,6 +5,7 @@ import org.antlr.v4.runtime.tree.RuleNode;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.w3c.dom.Text;
 import xquery.antlr.XQueryBaseVisitor;
 import xquery.antlr.XQueryParser;
 
@@ -20,7 +21,7 @@ import java.util.List;
  */
 public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
 
-    public static boolean debugOn = false;
+    public static boolean debugOn = true;
 
     private LinkedList<QueryList> stack = new LinkedList<>();
     private VariableContext varContext= new VariableContext();
@@ -201,6 +202,14 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
         return res;
     }
 
+    @Override public QueryList visitDoubleDot(XQueryParser.DoubleDotContext ctx) {
+        debug(ctx);
+
+        QueryList res = stack.peek().parent();
+        return res;
+    }
+
+
     @Override public QueryList visitStar(XQueryParser.StarContext ctx) {
         debug(ctx);
 
@@ -211,6 +220,40 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
         return res;
     }
 
+    @Override public QueryList visitText (XQueryParser.TextContext ctx) {
+        debug(ctx);
+
+        QueryList res = new QueryList();
+        for(Node node : stack.peek()) {
+            res.add(node.getFirstChild());
+        }
+        return res;
+    }
+
+    @Override public QueryList visitAttName(XQueryParser.AttNameContext ctx ) {
+        debug(ctx);
+
+        String attName = ctx.att_name().getText();
+        QueryList res = new QueryList();
+        if(attName == null || attName.isEmpty())
+            return res;
+        for(Node node : stack.peek()) {
+                if(node.hasAttributes())
+                    res.add(node.getAttributes().getNamedItem(attName));
+        }
+
+        return res;
+
+    }
+
+    @Override public QueryList visitParenthesisRp(XQueryParser.ParenthesisRpContext ctx) {
+        debug(ctx);
+
+        QueryList res = visitNode(stack.peek(), ctx.rp());
+        return res;
+    }
+
+
     @Override public QueryList visitRpWithFilter(XQueryParser.RpWithFilterContext ctx) {
         debug(ctx);
 
@@ -220,6 +263,15 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
         return res2;
     }
 
+    @Override public QueryList visitRpCommaRp(XQueryParser.RpCommaRpContext ctx) {
+        debug(ctx);
+
+        QueryList res1 = visitNode(stack.peek(), ctx.rp(0));
+        QueryList res2 = visitNode(stack.peek(), ctx.rp(1));
+        QueryList res = res1.union(res2);
+
+        return res;
+    }
     /*
      *  Visitor functions for "f" (filter)
      *
@@ -254,5 +306,95 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
         }
         return res;
     }
+
+    @Override public QueryList visitIDEqualFilter(XQueryParser.IDEqualFilterContext ctx) {
+        debug(ctx);
+
+        QueryList res = new QueryList();
+        for(Node node : stack.peek()) {
+            QueryList tmpContext = new QueryList();
+            tmpContext.add(node);
+            QueryList res1 = visitNode(tmpContext, ctx.rp(0));
+            QueryList res2 = visitNode(tmpContext, ctx.rp(1));
+            if(!res1.idIntersect(res2).isEmpty()) {
+                res.add(node);
+            }
+        }
+        return res;
+    }
+
+    @Override public QueryList visitParenthesisFilter(XQueryParser.ParenthesisFilterContext ctx) {
+        debug(ctx);
+
+        QueryList res = new QueryList();
+        for (Node node : stack.peek()) {
+            QueryList tmpContext = new QueryList();
+            tmpContext.add(node);
+            if (!visitNode(tmpContext, ctx.f()).isEmpty()) {
+                res.add(node);
+            }
+        }
+        return res;
+
+    }
+
+    @Override public QueryList visitAndFilter(XQueryParser.AndFilterContext ctx) {
+        debug(ctx);
+
+        QueryList res1 = new QueryList();
+        QueryList res2 = new QueryList();
+        for (Node node : stack.peek()) {
+            QueryList tmpContext = new QueryList();
+            tmpContext.add(node);
+            if (!visitNode(tmpContext, ctx.f(0)).isEmpty()) {
+                res1.add(node);
+            }
+            if (!visitNode(tmpContext, ctx.f(1)).isEmpty()) {
+                res2.add(node);
+            }
+
+        }
+        res1 = res1.valueIntersect(res2);
+        return res1;
+
+    }
+
+    @Override public QueryList visitOrFilter(XQueryParser.OrFilterContext ctx) {
+        debug(ctx);
+
+        QueryList res1 = new QueryList();
+        QueryList res2 = new QueryList();
+        for (Node node : stack.peek()) {
+            QueryList tmpContext = new QueryList();
+            tmpContext.add(node);
+            if (!visitNode(tmpContext, ctx.f(0)).isEmpty()) {
+                res1.add(node);
+            }
+            if (!visitNode(tmpContext, ctx.f(1)).isEmpty()) {
+                res2.add(node);
+            }
+
+        }
+        res1 = res1.union(res2);
+        return res1;
+
+    }
+
+    @Override public QueryList visitNotFilter(XQueryParser.NotFilterContext ctx) {
+        debug(ctx);
+
+        QueryList res = new QueryList();
+        for (Node node : stack.peek()) {
+            QueryList tmpContext = new QueryList();
+            tmpContext.add(node);
+            if (!visitNode(tmpContext, ctx.f()).isEmpty()) {
+                res.add(node);
+            }
+        }
+        res = stack.peek().subtract(res);
+        return res;
+
+    }
+
 
 }

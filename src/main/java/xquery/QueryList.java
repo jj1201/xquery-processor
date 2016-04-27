@@ -119,7 +119,7 @@ public class QueryList implements NodeList, Iterable<Node> {
         for (Node node : nodeList) {
             Node p = node.getParentNode();
             if (p != null) {
-                res.add(node);
+                res.add(p);
             }
         }
         return res;
@@ -148,6 +148,15 @@ public class QueryList implements NodeList, Iterable<Node> {
             if (idContains(node)) {
                 res.add(node);
             }
+        }
+        return res;
+    }
+
+    public QueryList subtract(QueryList nl) {
+        QueryList res = new QueryList();
+        for(Node node : this) {
+            if(!nl.valueContains(node))
+                res.add(node);
         }
         return res;
     }
