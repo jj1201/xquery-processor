@@ -24,13 +24,6 @@ public class XQueryBaseVisitor<T> extends AbstractParseTreeVisitor<T> implements
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitFLWR(XQueryParser.FLWRContext ctx) { return visitChildren(ctx); }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
 	@Override public T visitTagNameXq(XQueryParser.TagNameXqContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
@@ -39,6 +32,13 @@ public class XQueryBaseVisitor<T> extends AbstractParseTreeVisitor<T> implements
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
 	@Override public T visitParenthesisXq(XQueryParser.ParenthesisXqContext ctx) { return visitChildren(ctx); }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation returns the result of calling
+	 * {@link #visitChildren} on {@code ctx}.</p>
+	 */
+	@Override public T visitFlwrXq(XQueryParser.FlwrXqContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -94,7 +94,14 @@ public class XQueryBaseVisitor<T> extends AbstractParseTreeVisitor<T> implements
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitFfor(XQueryParser.FforContext ctx) { return visitChildren(ctx); }
+	@Override public T visitFlwr(XQueryParser.FlwrContext ctx) { return visitChildren(ctx); }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation returns the result of calling
+	 * {@link #visitChildren} on {@code ctx}.</p>
+	 */
+	@Override public T visitLwr(XQueryParser.LwrContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -150,14 +157,14 @@ public class XQueryBaseVisitor<T> extends AbstractParseTreeVisitor<T> implements
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitXqSomeCond(XQueryParser.XqSomeCondContext ctx) { return visitChildren(ctx); }
+	@Override public T visitNotCond(XQueryParser.NotCondContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitNotCond(XQueryParser.NotCondContext ctx) { return visitChildren(ctx); }
+	@Override public T visitXqSomeCond(XQueryParser.XqSomeCondContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -178,7 +185,7 @@ public class XQueryBaseVisitor<T> extends AbstractParseTreeVisitor<T> implements
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitVar_in_xq(XQueryParser.Var_in_xqContext ctx) { return visitChildren(ctx); }
+	@Override public T visitSomeCond(XQueryParser.SomeCondContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *

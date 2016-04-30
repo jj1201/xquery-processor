@@ -85,11 +85,58 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
         debug(ctx);
 
         varContext.pushContext();
-        visitNode(null, ctx.let());
+        visitNode(stack.peek(), ctx.let());
         QueryList res = visitNode(stack.peek(), ctx.xq());
         varContext.popContext();
 
         return res;
+    }
+
+    @Override public QueryList visitFlwrXq(XQueryParser.FlwrXqContext ctx) {
+        debug(ctx);
+
+        return visitNode(stack.peek(), ctx.flwr());
+    }
+
+    /*
+     *  Visitor functions for FLWR
+     *
+     */
+
+    @Override public QueryList visitFlwr(XQueryParser.FlwrContext ctx) {
+        debug(ctx);
+
+        QueryList res = new QueryList();
+        String varName = ctx.var().getText();
+        QueryList varList = visitNode(stack.peek(), ctx.xq());
+
+        for (Node v : varList) {
+            varContext.pushContext();
+            QueryList tmpContext = new QueryList();
+            tmpContext.add(v);
+            varContext.putVar(varName, tmpContext);
+            if (ctx.lwr() != null) {
+                res = res.union(visitNode(stack.peek(), ctx.lwr()));
+            } else {
+                res = res.union(visitNode(stack.peek(), ctx.flwr()));
+            }
+            varContext.popContext();
+        }
+
+        return res;
+    }
+
+    @Override public QueryList visitLwr(XQueryParser.LwrContext ctx) {
+        debug(ctx);
+
+        if (ctx.let() != null) { visitNode(stack.peek(), ctx.let()); }
+        if (ctx.where() != null) {
+            if (visitNode(stack.peek(), ctx.where()) == null) {
+                /* "where return null" means cond is false*/
+                return new QueryList();
+            }
+        }
+        return visitNode(stack.peek(), ctx.ret());
     }
 
     /*
@@ -108,6 +155,33 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
         return null;
     }
 
+    /*
+     *  Visitor functions for "where"
+     *
+     */
+
+    @Override public QueryList visitWhere(XQueryParser.WhereContext ctx) {
+        /* "where return null" means cond is false*/
+        return null;
+    }
+
+    /*
+     *  Visitor functions for "return"
+     *
+     */
+
+    @Override public QueryList visitRet(XQueryParser.RetContext ctx) {
+        return visitNode(stack.peek(), ctx.xq());
+    }
+
+    /*
+     *  Visitor functions for Conditions
+     *
+     */
+
+    @Override public QueryList visitXqSomeCond(XQueryParser.XqSomeCondContext ctx) {
+        return null;
+    }
 
     /*
      *  Visitor functions for "ap" (absolute path)

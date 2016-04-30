@@ -5,18 +5,18 @@ import org.antlr.v4.runtime.tree.*;
 import xquery.antlr.*;
 import org.w3c.dom.*;
 
-import java.util.List;
-
 import javax.xml.xpath.*;
 import javax.xml.parsers.*;
+
+
 
 public class QueryProcessor {
 
     private static String fpath = "src/main/resource/test.xml";
     private static String rpath = "/bookstore[book/author = ebook/author]/./*";
     private static String query =
-                        "let $moe := doc(src/main/resource/test.xml)/.\n" +
-                        "$moe/bookstore[book/author = ebook/author]/./*";
+            "for $a in doc(src/main/resource/test.xml)/bookstore\n" +
+            "return $a/*";
 
     public static NodeList evaluate(String fp, String rp) {
         String query = fp + rp ; //"doc(" + fp + ")" + rp;
@@ -64,7 +64,8 @@ public class QueryProcessor {
                 }
             }
         } else {
-            System.out.println("Failed: Different Length");
+            System.out.println("Failed: Different Length ("+myRes.getLength()
+                                + " - " + stdRes.getLength() + ")");
             return false;
         }
         System.out.println("Succeed.");

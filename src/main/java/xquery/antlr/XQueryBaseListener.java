@@ -28,18 +28,6 @@ public class XQueryBaseListener implements XQueryListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterFLWR(XQueryParser.FLWRContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitFLWR(XQueryParser.FLWRContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
 	@Override public void enterTagNameXq(XQueryParser.TagNameXqContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -59,6 +47,18 @@ public class XQueryBaseListener implements XQueryListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitParenthesisXq(XQueryParser.ParenthesisXqContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterFlwrXq(XQueryParser.FlwrXqContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitFlwrXq(XQueryParser.FlwrXqContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -148,13 +148,25 @@ public class XQueryBaseListener implements XQueryListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterFfor(XQueryParser.FforContext ctx) { }
+	@Override public void enterFlwr(XQueryParser.FlwrContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitFfor(XQueryParser.FforContext ctx) { }
+	@Override public void exitFlwr(XQueryParser.FlwrContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterLwr(XQueryParser.LwrContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitLwr(XQueryParser.LwrContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -244,18 +256,6 @@ public class XQueryBaseListener implements XQueryListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterXqSomeCond(XQueryParser.XqSomeCondContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitXqSomeCond(XQueryParser.XqSomeCondContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
 	@Override public void enterNotCond(XQueryParser.NotCondContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -263,6 +263,18 @@ public class XQueryBaseListener implements XQueryListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitNotCond(XQueryParser.NotCondContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterXqSomeCond(XQueryParser.XqSomeCondContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitXqSomeCond(XQueryParser.XqSomeCondContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -292,13 +304,13 @@ public class XQueryBaseListener implements XQueryListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterVar_in_xq(XQueryParser.Var_in_xqContext ctx) { }
+	@Override public void enterSomeCond(XQueryParser.SomeCondContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitVar_in_xq(XQueryParser.Var_in_xqContext ctx) { }
+	@Override public void exitSomeCond(XQueryParser.SomeCondContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

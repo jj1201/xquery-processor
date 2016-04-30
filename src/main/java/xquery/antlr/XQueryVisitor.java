@@ -18,13 +18,6 @@ public interface XQueryVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitVarAsXq(XQueryParser.VarAsXqContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code FLWR}
-	 * labeled alternative in {@link XQueryParser#xq}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitFLWR(XQueryParser.FLWRContext ctx);
-	/**
 	 * Visit a parse tree produced by the {@code TagNameXq}
 	 * labeled alternative in {@link XQueryParser#xq}.
 	 * @param ctx the parse tree
@@ -38,6 +31,13 @@ public interface XQueryVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitParenthesisXq(XQueryParser.ParenthesisXqContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code FlwrXq}
+	 * labeled alternative in {@link XQueryParser#xq}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitFlwrXq(XQueryParser.FlwrXqContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code XqSlashSlashRp}
 	 * labeled alternative in {@link XQueryParser#xq}.
@@ -87,11 +87,17 @@ public interface XQueryVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitVar(XQueryParser.VarContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link XQueryParser#ffor}.
+	 * Visit a parse tree produced by {@link XQueryParser#flwr}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitFfor(XQueryParser.FforContext ctx);
+	T visitFlwr(XQueryParser.FlwrContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link XQueryParser#lwr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitLwr(XQueryParser.LwrContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link XQueryParser#let}.
 	 * @param ctx the parse tree
@@ -139,19 +145,19 @@ public interface XQueryVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitAndCond(XQueryParser.AndCondContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code XqSomeCond}
-	 * labeled alternative in {@link XQueryParser#cond}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitXqSomeCond(XQueryParser.XqSomeCondContext ctx);
-	/**
 	 * Visit a parse tree produced by the {@code NotCond}
 	 * labeled alternative in {@link XQueryParser#cond}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitNotCond(XQueryParser.NotCondContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code XqSomeCond}
+	 * labeled alternative in {@link XQueryParser#cond}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitXqSomeCond(XQueryParser.XqSomeCondContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code XqEmptyCOnd}
 	 * labeled alternative in {@link XQueryParser#cond}.
@@ -167,11 +173,12 @@ public interface XQueryVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitParenthesisCond(XQueryParser.ParenthesisCondContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link XQueryParser#var_in_xq}.
+	 * Visit a parse tree produced by the {@code SomeCond}
+	 * labeled alternative in {@link XQueryParser#some_cond}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitVar_in_xq(XQueryParser.Var_in_xqContext ctx);
+	T visitSomeCond(XQueryParser.SomeCondContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code DocSlashRp}
 	 * labeled alternative in {@link XQueryParser#ap}.

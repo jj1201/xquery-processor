@@ -13,7 +13,7 @@ xq
     |   xq '/' rp                               # XqSlashRp
     |   xq '//' rp                              # XqSlashSlashRp
     |   '<'tag_name'>{'xq'}</'tag_name'>'       # TagNameXq
-    |   ffor let? where? ret                    # FLWR
+    |   'for' flwr                              # FlwrXq
     |   let xq                                  # LetXq
     ;
 
@@ -22,9 +22,14 @@ var
     :   '$' STRING
     ;
 
-/* "for" Clause */
-ffor
-    :   'for' var_in_xq+
+/* "FLWR Clause (Recursive Definition) */
+flwr
+    :   var 'in' xq (lwr | (',' flwr))
+    ;
+
+/* LWR (Part of flwr helper) */
+lwr
+    :   let? where? ret
     ;
 
 /* "let Clause" */
@@ -47,17 +52,17 @@ cond
     :   xq ('='|'eq') xq                        # XqValueEqualCond
     |   xq ('=='|'is') xq                       # XqIdEqualCond
     |   'empty(' xq ')'                         # XqEmptyCOnd
-    |   'some' var_in_xq+ 'satisfies' cond      # XqSomeCond
+    |   'some' some_cond                        # XqSomeCond
     |   '(' cond ')'                            # ParenthesisCond
     |   cond 'and' cond                         # AndCond
     |   cond 'or' cond                          # OrCond
     |   'not' cond                              # NotCond
     ;
 
-
-/* Var in Xq */
-var_in_xq
-    :   var 'in' xq
+/* "Some" condition (Recursive Definition) */
+some_cond
+    :   var 'in' xq (('satisfies' cond )
+                     | some_cond)               # SomeCond
     ;
 
 /* Absoluate Path */

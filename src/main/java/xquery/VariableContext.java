@@ -33,7 +33,7 @@ public class VariableContext {
      *  Variable Related methods
      */
 
-    public void putVar(String name, QueryList xq) {stack.peek().put(name, xq);}
+    public void putVar(String name, QueryList res) {stack.peek().put(name, res);}
 
     public QueryList getVar(String name) {
         for(int i=stack.size()-1; i>=0; i--) {
