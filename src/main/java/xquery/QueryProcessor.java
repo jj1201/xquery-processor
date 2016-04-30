@@ -1,25 +1,36 @@
 package xquery;
 
+import xquery.antlr.*;
+
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.*;
-import xquery.antlr.*;
 import org.w3c.dom.*;
 
-import javax.xml.xpath.*;
-import javax.xml.parsers.*;
+import com.saxonica.xqj.SaxonXQDataSource;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.xquery.*;
 
-
+import java.io.StringWriter;
 
 public class QueryProcessor {
 
-    private static String fpath = "src/main/resource/test.xml";
-    private static String rpath = "/bookstore[book/author = ebook/author]/./*";
-    private static String query =
-            "for $a in doc(src/main/resource/test.xml)/bookstore\n" +
-            "return $a/*";
+    private static String test_query =
+            "for $a in doc(\"src/main/resource/test.xml\")/bookstore\n" +
+                    "return $a";
 
-    public static NodeList evaluate(String fp, String rp) {
-        String query = fp + rp ; //"doc(" + fp + ")" + rp;
+    public static String nodeToString(Node node) throws Exception {
+        StringWriter writer = new StringWriter();
+        Transformer transformer = TransformerFactory.newInstance().newTransformer();
+        transformer.transform(new DOMSource(node), new StreamResult(writer));
+        String output = writer.toString();
+        return output.substring(output.indexOf("?>") + 2);
+    }
+
+    public static String evaluate(String query) throws Exception {
+
         // Init ANTLR
         ANTLRInputStream inputStream = new ANTLRInputStream(query);
         XQueryLexer lexer = new XQueryLexer(inputStream);
@@ -29,56 +40,39 @@ public class QueryProcessor {
 
         // Visit
         QueryVisitor visitor = new QueryVisitor();
-        return visitor.visit(tree);
+        QueryList res = visitor.visit(tree);
+
+        // Build result String
+        StringBuilder resStr = new StringBuilder();
+        for (Node node : res) {
+            if (resStr.length() > 0) { resStr.append('\n'); }
+            resStr.append(nodeToString(node));
+        }
+        return resStr.toString();
     }
 
-    public static NodeList stdEvaluate(String fp, String rp) throws Exception{
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        DocumentBuilder builder = factory.newDocumentBuilder();
-        Document doc = builder.parse(fp);
-        XPathFactory xPathfactory = XPathFactory.newInstance();
-        XPath xpath = xPathfactory.newXPath();
-        XPathExpression expr = xpath.compile(rp);
-        return (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
-    }
+    public static String stdEvaluate(String query) throws Exception{
 
-    public static boolean checkResult(NodeList myRes, NodeList stdRes) {
+        XQDataSource ds = new SaxonXQDataSource();
+        XQConnection conn = ds.getConnection();
+        XQPreparedExpression exp = conn.prepareExpression(query);
+        XQResultSequence result = exp.executeQuery();
 
-        System.out.println("Mine:");
-        for (int i=0; i<myRes.getLength(); i++) {
-            System.out.println(myRes.item(i).getTextContent());
-        }
-
-        System.out.println("STD:");
-        for (int i=0; i<stdRes.getLength(); i++) {
-            System.out.println(stdRes.item(i).getTextContent());
-        }
-
-        if (myRes.getLength() == stdRes.getLength()) {
-            for (int i=0; i<myRes.getLength(); i++) {
-                if (!myRes.item(i).isEqualNode(stdRes.item(i))) {
-                    System.out.println("Failed:");
-                    System.out.println(myRes.item(i).toString());
-                    System.out.println(stdRes.item(i).toString());
-                    return false;
-                }
-            }
-        } else {
-            System.out.println("Failed: Different Length ("+myRes.getLength()
-                                + " - " + stdRes.getLength() + ")");
-            return false;
-        }
-        System.out.println("Succeed.");
-        return true;
+        return result.getSequenceAsString(null);
     }
 
     public static void main( String[] args ) throws  Exception{
 
-        NodeList myRes = evaluate(query, "" /*fpath, rpath*/);
+        String myRes = evaluate(test_query);
 
-        NodeList stdRes = stdEvaluate(fpath, rpath);
+        String stdRes = stdEvaluate(test_query);
 
-        checkResult(myRes, stdRes);
-
+        if (myRes.equals(stdRes)) {
+            System.out.println(myRes);
+            System.out.print("Success");
+        } else {
+            System.out.println(myRes);
+            System.out.println(stdRes);
+        }
     }
 }
