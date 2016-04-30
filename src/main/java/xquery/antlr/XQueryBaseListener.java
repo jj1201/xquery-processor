@@ -280,13 +280,13 @@ public class XQueryBaseListener implements XQueryListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterXqEmptyCOnd(XQueryParser.XqEmptyCOndContext ctx) { }
+	@Override public void enterXqEmptyCond(XQueryParser.XqEmptyCondContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitXqEmptyCOnd(XQueryParser.XqEmptyCOndContext ctx) { }
+	@Override public void exitXqEmptyCond(XQueryParser.XqEmptyCondContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

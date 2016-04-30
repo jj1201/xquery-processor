@@ -15,11 +15,22 @@ import javax.xml.xquery.*;
 
 import java.io.StringWriter;
 
+/**
+ * TODO:
+ *      ( xq ) cannot be recognized correctly
+ *      WS between str_const is skipped
+ *      XML transform is not correct when has external tags
+ */
+
 public class QueryProcessor {
 
     private static String test_query =
+            "<result> { " +
             "for $a in doc(\"src/main/resource/test.xml\")/bookstore\n" +
-                    "return $a";
+                    "let $a := $a/*" +
+                    "where some $b in $a satisfies empty($b/country)" +
+                    "return ( \"asd\" )" +
+            "} </result>";
 
     public static String nodeToString(Node node) throws Exception {
         StringWriter writer = new StringWriter();
@@ -71,8 +82,11 @@ public class QueryProcessor {
             System.out.println(myRes);
             System.out.print("Success");
         } else {
+            System.out.println("----------Mine---------");
             System.out.println(myRes);
+            System.out.println("----------Std----------");
             System.out.println(stdRes);
+            System.out.println("----------Failed-------");
         }
     }
 }

@@ -6,13 +6,13 @@ grammar XQuery;
 /* XQuery */
 xq
     :   var                                     # VarAsXq
-    |   str_const                               # StringAsXq
+    |   '"'str_const'"'                         # StringAsXq
     |   ap                                      # ApAsXq
     |   '(' xq ')'                              # ParenthesisXq
     |   xq ',' xq                               # XqCommaXq
     |   xq '/' rp                               # XqSlashRp
     |   xq '//' rp                              # XqSlashSlashRp
-    |   '<'tag_name'>{'xq'}</'tag_name'>'       # TagNameXq
+    |   '<'tag_name'>''{'xq'}''</'tag_name'>'   # TagNameXq
     |   'for' flwr                              # FlwrXq
     |   let xq                                  # LetXq
     ;
@@ -51,7 +51,7 @@ ret
 cond
     :   xq ('='|'eq') xq                        # XqValueEqualCond
     |   xq ('=='|'is') xq                       # XqIdEqualCond
-    |   'empty(' xq ')'                         # XqEmptyCOnd
+    |   'empty(' xq ')'                         # XqEmptyCond
     |   'some' some_cond                        # XqSomeCond
     |   '(' cond ')'                            # ParenthesisCond
     |   cond 'and' cond                         # AndCond
@@ -67,8 +67,8 @@ some_cond
 
 /* Absoluate Path */
 ap
-    :   'doc' '("' file_name '")' '/' rp          # DocSlashRp
-    |   'doc' '("' file_name '")' '//' rp         # DocSlashSlashRp
+    :   'doc' '("' file_name '")' '/' rp        # DocSlashRp
+    |   'doc' '("' file_name '")' '//' rp       # DocSlashSlashRp
     ;
 
 /* Relative Path */
@@ -114,7 +114,8 @@ att_name
 
 /* String Const */
 str_const
-    :   '"' ~('"') '"'
+
+    :   ( ~('"') )*
     ;
 
 /* String without dot and not empty */
@@ -124,5 +125,5 @@ STRING
 
 /* White Space */
 WS
-    :   (' '|'\t'|'\n'|'\r')+  ->  skip
+    :   (' '|'\t'|'\n'|'\r')+   -> skip
     ;

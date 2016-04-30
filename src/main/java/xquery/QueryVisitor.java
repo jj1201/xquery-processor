@@ -1,5 +1,6 @@
 package xquery;
 
+import com.sun.org.apache.xerces.internal.dom.DocumentImpl;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.RuleNode;
 import org.w3c.dom.Document;
@@ -21,10 +22,12 @@ import java.util.List;
  */
 public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
 
-    public static boolean debugOn = true;
+    public static boolean debugOn = false;
 
     private LinkedList<QueryList> stack = new LinkedList<>();
     private VariableContext varContext= new VariableContext();
+
+    private Document doc;
 
     private void debug(ParserRuleContext ctx) {
         if (!debugOn) return;
@@ -36,7 +39,7 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
     }
 
     /*
-     *  Helper Methods for XPath
+     *  Core Helper Methods
      *
      */
 
@@ -72,6 +75,14 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
         return varContext.getVar(ctx.var().getText());
     }
 
+    @Override public QueryList visitStringAsXq(XQueryParser.StringAsXqContext ctx) {
+        debug(ctx);
+
+        QueryList res = new QueryList();
+        res.add(doc.createTextNode(ctx.str_const().getText()));
+        return res;
+    }
+
     @Override public QueryList visitXqSlashRp(XQueryParser.XqSlashRpContext ctx) {
         debug(ctx);
 
@@ -79,6 +90,34 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
         QueryList res2 = visitNode(res1, ctx.rp());
 
         return res2;
+    }
+
+    @Override public QueryList visitParenthesisXq(XQueryParser.ParenthesisXqContext ctx) {
+        debug(ctx);
+
+        return visitNode(stack.peek(), ctx.xq());
+    }
+
+    @Override public QueryList visitXqCommaXq(XQueryParser.XqCommaXqContext ctx) {
+        debug(ctx);
+
+        QueryList res1 = visitNode(stack.peek(), ctx.xq(0));
+        QueryList res2 = visitNode(stack.peek(), ctx.xq(1));
+
+        return res1.union(res2);
+    }
+
+    @Override public QueryList visitTagNameXq(XQueryParser.TagNameXqContext ctx) {
+        debug(ctx);
+
+        QueryList subres = visitNode(stack.peek(), ctx.xq());
+        Node resNode = doc.createElement(ctx.tag_name(0).getText());
+        for (Node node : subres) {
+            resNode.appendChild(node);
+        }
+        QueryList res = new QueryList();
+        res.add(resNode);
+        return res;
     }
 
     @Override public QueryList visitLetXq(XQueryParser.LetXqContext ctx) {
@@ -161,8 +200,10 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
      */
 
     @Override public QueryList visitWhere(XQueryParser.WhereContext ctx) {
+        debug(ctx);
+
         /* "where return null" means cond is false*/
-        return null;
+        return visitNode(stack.peek(), ctx.cond());
     }
 
     /*
@@ -171,6 +212,8 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
      */
 
     @Override public QueryList visitRet(XQueryParser.RetContext ctx) {
+        debug(ctx);
+
         return visitNode(stack.peek(), ctx.xq());
     }
 
@@ -180,7 +223,42 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
      */
 
     @Override public QueryList visitXqSomeCond(XQueryParser.XqSomeCondContext ctx) {
-        return null;
+        debug(ctx);
+
+        return visitNode(stack.peek(), ctx.some_cond());
+    }
+
+    @Override public QueryList visitSomeCond(XQueryParser.SomeCondContext ctx) {
+        debug(ctx);
+
+        QueryList res = null;
+        String varName = ctx.var().getText();
+        QueryList varList = visitNode(stack.peek(), ctx.xq());
+
+        for (Node v : varList) {
+            varContext.pushContext();
+            QueryList tmpContext = new QueryList();
+            tmpContext.add(v);
+            varContext.putVar(varName, tmpContext);
+            if (ctx.cond() != null) {
+                res = visitNode(stack.peek(), ctx.cond());
+            } else {
+                res = visitNode(stack.peek(), ctx.some_cond());
+            }
+            varContext.popContext();
+        }
+        return res;
+    }
+
+    @Override public QueryList visitXqEmptyCond(XQueryParser.XqEmptyCondContext ctx) {
+        debug(ctx);
+
+        QueryList res = visitNode(stack.peek(), ctx.xq());
+        if (res.isEmpty()) {
+            return new QueryList();
+        } else {
+            return null;
+        }
     }
 
     /*
@@ -193,7 +271,6 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
 
         String fileName = ctx.file_name().getText();
         File xmlFile = new File(ctx.file_name().getText());
-        Document doc = null;
         try {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             DocumentBuilder builder = factory.newDocumentBuilder();
@@ -214,7 +291,6 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
 
         String fileName = ctx.file_name().getText();
         File xmlFile = new File(ctx.file_name().getText());
-        Document doc = null;
         try {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             DocumentBuilder builder = factory.newDocumentBuilder();

@@ -159,12 +159,12 @@ public interface XQueryVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitXqSomeCond(XQueryParser.XqSomeCondContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code XqEmptyCOnd}
+	 * Visit a parse tree produced by the {@code XqEmptyCond}
 	 * labeled alternative in {@link XQueryParser#cond}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitXqEmptyCOnd(XQueryParser.XqEmptyCOndContext ctx);
+	T visitXqEmptyCond(XQueryParser.XqEmptyCondContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code ParenthesisCond}
 	 * labeled alternative in {@link XQueryParser#cond}.
