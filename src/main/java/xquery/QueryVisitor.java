@@ -301,16 +301,6 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
     }
 
     /*
-     *  Visitor functions for isEmpty condition
-     *
-     */
-
-    @Override public QueryList visitXqEmptyCOnd(XQueryParser.XqEmptyCOndContext ctx) {
-        QueryList res = visitNode(stack.peek(), ctx.xq());
-        return res;
-    }
-
-    /*
      *  Visitor functions for parenthesis condition
      *
      */
