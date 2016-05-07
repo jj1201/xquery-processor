@@ -67,8 +67,8 @@ some_cond
 
 /* Absoluate Path */
 ap
-    :   'doc' '("' file_name '")' '/' rp        # DocSlashRp
-    |   'doc' '("' file_name '")' '//' rp       # DocSlashSlashRp
+    :   ('doc' | 'document') '("' file_name '")' '/' rp        # DocSlashRp
+    |   ('doc' | 'document') '("' file_name '")' '//' rp       # DocSlashSlashRp
     ;
 
 /* Relative Path */

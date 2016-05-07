@@ -83,11 +83,26 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
         return res;
     }
 
+    @Override public QueryList visitApAsXq(XQueryParser.ApAsXqContext ctx) {
+        debug(ctx);
+
+        return visitNode(stack.peek(), ctx.ap());
+    }
+
     @Override public QueryList visitXqSlashRp(XQueryParser.XqSlashRpContext ctx) {
         debug(ctx);
 
         QueryList res1 = visitNode(stack.peek(), ctx.xq());
         QueryList res2 = visitNode(res1, ctx.rp());
+
+        return res2;
+    }
+
+    @Override public QueryList visitXqSlashSlashRp(XQueryParser.XqSlashSlashRpContext ctx) {
+        debug(ctx);
+
+        QueryList res1 = visitNode(stack.peek(), ctx.xq());
+        QueryList res2 = visitDescendant(res1, ctx.rp());
 
         return res2;
     }

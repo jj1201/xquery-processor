@@ -13,6 +13,8 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.xquery.*;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.StringWriter;
 
 /**
@@ -29,7 +31,7 @@ public class QueryProcessor {
             "for $a in doc(\"src/main/resource/test.xml\")/bookstore\n" +
                     "let $a := $a/*" +
                     "where some $b in $a satisfies empty($b/country)" +
-                    "return ( \"asd\" )" +
+                    "return ( \"asd\", $a)" +
             "} </result>";
 
     public static String nodeToString(Node node) throws Exception {
@@ -72,21 +74,42 @@ public class QueryProcessor {
         return result.getSequenceAsString(null);
     }
 
+    public static boolean checkResult(String res1, String res2) {
+        StringBuilder r1 = new StringBuilder();
+        StringBuilder r2 = new StringBuilder();
+        for (int i=0; i<res1.length(); i++) {
+            char ch = res1.charAt(i);
+            if (ch != '\t' && ch != '\n' && ch!= '\r' && ch != ' ') {
+                r1.append(ch);
+            }
+        }
+        for (int i=0; i<res2.length(); i++) {
+            char ch = res2.charAt(i);
+            if (ch != '\t' && ch != '\n' && ch!= '\r' && ch != ' ') {
+                r2.append(ch);
+            }
+        }
+        return r1.toString().equals(r2.toString());
+    }
+
     public static void main( String[] args ) throws  Exception{
 
-        String myRes = evaluate(test_query);
+        // Read single query from file
+        File queryFile = new File("src/main/resource/test.xql");
+        byte[] queryBuf = new byte[4096];
+        (new FileInputStream(queryFile)).read(queryBuf);
+        String query = (new String(queryBuf)).trim();
+        System.out.println("---------Query--------\n" + query);
 
-        String stdRes = stdEvaluate(test_query);
+        String myRes = evaluate(query);
+        System.out.println("---------Result--------\n" + myRes);
 
-        if (myRes.equals(stdRes)) {
-            System.out.println(myRes);
-            System.out.print("Success");
+        String stdRes = stdEvaluate(query);
+        if (checkResult(myRes, stdRes)) {
+            System.out.println("---------Success-------");
         } else {
-            System.out.println("----------Mine---------");
-            System.out.println(myRes);
-            System.out.println("----------Std----------");
+            System.out.println("---------Failed--------");
             System.out.println(stdRes);
-            System.out.println("----------Failed-------");
         }
     }
 }
