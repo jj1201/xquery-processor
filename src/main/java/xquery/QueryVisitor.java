@@ -79,7 +79,9 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
         debug(ctx);
 
         QueryList res = new QueryList();
-        res.add(doc.createTextNode(ctx.str_const().getText()));
+        String str = ctx.str_const().getText();
+        // Need to delete quotes here
+        res.add(doc.createTextNode(str.substring(1,str.length()-1)));
         return res;
     }
 
@@ -398,7 +400,8 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
         debug(ctx);
 
         String fileName = ctx.file_name().getText();
-        File xmlFile = new File(ctx.file_name().getText());
+        fileName = fileName.substring(1, fileName.length()-1); // delete quotes
+        File xmlFile = new File(fileName);
         try {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             DocumentBuilder builder = factory.newDocumentBuilder();
@@ -418,7 +421,8 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
         debug(ctx);
 
         String fileName = ctx.file_name().getText();
-        File xmlFile = new File(ctx.file_name().getText());
+        fileName = fileName.substring(1, fileName.length()-1); // delete quotes
+        File xmlFile = new File(fileName);
         try {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             DocumentBuilder builder = factory.newDocumentBuilder();

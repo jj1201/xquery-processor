@@ -103,7 +103,6 @@ public class QueryProcessor {
         byte[] queryBuf = new byte[4096];
         (new FileInputStream(queryFile)).read(queryBuf);
         String query = (new String(queryBuf)).trim();
-//        query = test_query;
         System.out.println("---------Query--------\n" + query);
 
         String myRes = evaluate(query);

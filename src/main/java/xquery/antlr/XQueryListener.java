@@ -138,6 +138,16 @@ public interface XQueryListener extends ParseTreeListener {
 	 */
 	void exitVar(XQueryParser.VarContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link XQueryParser#str_const}.
+	 * @param ctx the parse tree
+	 */
+	void enterStr_const(XQueryParser.Str_constContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link XQueryParser#str_const}.
+	 * @param ctx the parse tree
+	 */
+	void exitStr_const(XQueryParser.Str_constContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link XQueryParser#flwr}.
 	 * @param ctx the parse tree
 	 */
@@ -565,14 +575,4 @@ public interface XQueryListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitAtt_name(XQueryParser.Att_nameContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link XQueryParser#str_const}.
-	 * @param ctx the parse tree
-	 */
-	void enterStr_const(XQueryParser.Str_constContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link XQueryParser#str_const}.
-	 * @param ctx the parse tree
-	 */
-	void exitStr_const(XQueryParser.Str_constContext ctx);
 }

@@ -6,7 +6,7 @@ grammar XQuery;
 /* XQuery */
 xq
     :   var                                     # VarAsXq
-    |   '"'str_const'"'                         # StringAsXq
+    |   str_const                               # StringAsXq
     |   ap                                      # ApAsXq
     |   '(' xq ')'                              # ParenthesisXq
     |   xq ',' xq                               # XqCommaXq
@@ -20,6 +20,11 @@ xq
 /* Var */
 var
     :   '$' STRING
+    ;
+
+/* String Constant */
+str_const
+    :   QUOTED_STRING
     ;
 
 /* "FLWR Clause (Recursive Definition) */
@@ -67,8 +72,8 @@ some_cond
 
 /* Absoluate Path */
 ap
-    :   ('doc' | 'document') '("' file_name '")' '/' rp        # DocSlashRp
-    |   ('doc' | 'document') '("' file_name '")' '//' rp       # DocSlashSlashRp
+    :   ('doc' | 'document') '(' file_name ')' '/' rp        # DocSlashRp
+    |   ('doc' | 'document') '(' file_name ')' '//' rp       # DocSlashSlashRp
     ;
 
 /* Relative Path */
@@ -99,7 +104,7 @@ f
 
 /* File Name (Not perfect, just a course one) */
 file_name
-    :   STRING ('.' STRING)* ('/' STRING ('.' STRING)*)*
+    :   QUOTED_STRING
     ;
 
 /* Tag Name (Not perfect, just a course one) */
@@ -112,9 +117,12 @@ att_name
     :   STRING
     ;
 
-/* String Const */
-str_const
-
+/* Quited String */
+QUOTED_STRING
+    :   '"' INNER_STRING '"'
+    ;
+fragment
+INNER_STRING
     :   ( ~('"') )*
     ;
 
