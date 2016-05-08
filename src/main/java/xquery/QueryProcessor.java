@@ -7,6 +7,8 @@ import org.antlr.v4.runtime.tree.*;
 import org.w3c.dom.*;
 
 import com.saxonica.xqj.SaxonXQDataSource;
+
+import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
@@ -37,9 +39,11 @@ public class QueryProcessor {
     public static String nodeToString(Node node) throws Exception {
         StringWriter writer = new StringWriter();
         Transformer transformer = TransformerFactory.newInstance().newTransformer();
+        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+        transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
         transformer.transform(new DOMSource(node), new StreamResult(writer));
         String output = writer.toString();
-        return output.substring(output.indexOf("?>") + 2);
+        return output.substring(output.indexOf("?>") + 3);
     }
 
     public static String evaluate(String query) throws Exception {
@@ -99,13 +103,14 @@ public class QueryProcessor {
         byte[] queryBuf = new byte[4096];
         (new FileInputStream(queryFile)).read(queryBuf);
         String query = (new String(queryBuf)).trim();
+//        query = test_query;
         System.out.println("---------Query--------\n" + query);
 
         String myRes = evaluate(query);
         System.out.println("---------Result--------\n" + myRes);
 
         String stdRes = stdEvaluate(query);
-        if (checkResult(myRes, stdRes)) {
+        if (myRes.equals(stdRes)) {
             System.out.println("---------Success-------");
         } else {
             System.out.println("---------Failed--------");
