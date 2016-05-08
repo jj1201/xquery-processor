@@ -283,17 +283,15 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
      *
      */
      @Override public QueryList visitXqValueEqualCond(XQueryParser.XqValueEqualCondContext ctx) {
-         QueryList res = new QueryList();
-         for (Node node : stack.peek()) {
-             QueryList tmpContext = new QueryList();
-             tmpContext.add(node);
-             QueryList res1 = visitNode(tmpContext, ctx.xq(0));
-             QueryList res2 = visitNode(tmpContext, ctx.xq(1));
-             if (!res1.valueIntersect(res2).isEmpty()) {
-                 res.add(node);
-             }
+         debug(ctx);
+
+         QueryList res1 = visitNode(stack.peek(), ctx.xq(0));
+         QueryList res2 = visitNode(stack.peek(), ctx.xq(1));
+         if (!res1.valueIntersect(res2).isEmpty()) {
+             return new QueryList();
+         } else {
+             return null;
          }
-         return res;
      }
 
     /*
@@ -304,17 +302,13 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
     @Override public QueryList visitXqIdEqualCond(XQueryParser.XqIdEqualCondContext ctx) {
         debug(ctx);
 
-        QueryList res = new QueryList();
-        for(Node node : stack.peek()) {
-            QueryList tmpContext = new QueryList();
-            tmpContext.add(node);
-            QueryList res1 = visitNode(tmpContext, ctx.xq(0));
-            QueryList res2 = visitNode(tmpContext, ctx.xq(1));
-            if(!res1.idIntersect(res2).isEmpty()) {
-                res.add(node);
-            }
+        QueryList res1 = visitNode(stack.peek(), ctx.xq(0));
+        QueryList res2 = visitNode(stack.peek(), ctx.xq(1));
+        if (!res1.idIntersect(res2).isEmpty()) {
+            return new QueryList();
+        } else {
+            return null;
         }
-        return res;
     }
 
     /*
@@ -323,6 +317,8 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
      */
 
     @Override public QueryList visitParenthesisCond(XQueryParser.ParenthesisCondContext ctx) {
+        debug(ctx);
+
         QueryList res = visitNode(stack.peek(), ctx.cond());
         return res;
     }
@@ -333,21 +329,16 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
      */
 
     @Override public QueryList visitAndCond(XQueryParser.AndCondContext ctx) {
-        QueryList res1 = new QueryList();
-        QueryList res2 = new QueryList();
-        for (Node node : stack.peek()) {
-            QueryList tmpContext = new QueryList();
-            tmpContext.add(node);
-            if (!visitNode(tmpContext, ctx.cond(0)).isEmpty()) {
-                res1.add(node);
-            }
-            if (!visitNode(tmpContext, ctx.cond(1)).isEmpty()) {
-                res2.add(node);
-            }
+        debug(ctx);
 
+        QueryList res1 = visitNode(stack.peek(), ctx.cond(0));
+        QueryList res2 = visitNode(stack.peek(), ctx.cond(1));
+
+        if (res1 == null || res2 == null) {
+            return null;
+        } else {
+            return new QueryList();
         }
-        res1 = res1.valueIntersect(res2);
-        return res1;
     }
 
     /*
@@ -356,21 +347,16 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
      */
 
     @Override public QueryList visitOrCond(XQueryParser.OrCondContext ctx) {
-        QueryList res1 = new QueryList();
-        QueryList res2 = new QueryList();
-        for (Node node : stack.peek()) {
-            QueryList tmpContext = new QueryList();
-            tmpContext.add(node);
-            if (!visitNode(tmpContext, ctx.cond(0)).isEmpty()) {
-                res1.add(node);
-            }
-            if (!visitNode(tmpContext, ctx.cond(1)).isEmpty()) {
-                res2.add(node);
-            }
+        debug(ctx);
 
+        QueryList res1 = visitNode(stack.peek(), ctx.cond(0));
+        QueryList res2 = visitNode(stack.peek(), ctx.cond(1));
+
+        if (res1 == null && res2 == null) {
+            return null;
+        } else {
+            return new QueryList();
         }
-        res1 = res1.union(res2);
-        return res1;
     }
 
     /*
@@ -379,16 +365,15 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
      */
 
     @Override public QueryList visitNotCond(XQueryParser.NotCondContext ctx) {
-        QueryList res = new QueryList();
-        for (Node node : stack.peek()) {
-            QueryList tmpContext = new QueryList();
-            tmpContext.add(node);
-            if (!visitNode(tmpContext, ctx.cond()).isEmpty()) {
-                res.add(node);
-            }
+        debug(ctx);
+
+        QueryList res1 = visitNode(stack.peek(), ctx.cond());
+
+        if (res1 != null) {
+            return null;
+        } else {
+            return new QueryList();
         }
-        res = stack.peek().subtract(res);
-        return res;
     }
 
     /*

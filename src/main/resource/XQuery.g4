@@ -39,7 +39,7 @@ lwr
 
 /* "let Clause" */
 let
-    :   'let' (var ':=' xq)+
+    :   'let' (var ':=' xq) (',' var ':=' xq)*
     ;
 
 /* "where" Clause */

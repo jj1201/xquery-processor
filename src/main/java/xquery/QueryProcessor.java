@@ -29,12 +29,10 @@ import java.io.StringWriter;
 public class QueryProcessor {
 
     private static String test_query =
-            "<result> { " +
             "for $a in doc(\"src/main/resource/test.xml\")/bookstore\n" +
                     "let $a := $a/*" +
                     "where some $b in $a satisfies empty($b/country)" +
-                    "return ( \"asd\", $a)" +
-            "} </result>";
+                    "return ( \"asd\", $a)";
 
     public static String nodeToString(Node node) throws Exception {
         StringWriter writer = new StringWriter();
@@ -42,8 +40,7 @@ public class QueryProcessor {
         transformer.setOutputProperty(OutputKeys.INDENT, "yes");
         transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
         transformer.transform(new DOMSource(node), new StreamResult(writer));
-        String output = writer.toString();
-        return output.substring(output.indexOf("?>") + 3);
+        return writer.toString();
     }
 
     public static String evaluate(String query) throws Exception {
@@ -62,10 +59,15 @@ public class QueryProcessor {
         // Build result String
         StringBuilder resStr = new StringBuilder();
         for (Node node : res) {
-            if (resStr.length() > 0) { resStr.append('\n'); }
-            resStr.append(nodeToString(node));
+            String str = nodeToString(node);
+            if (node.getNodeType() != Node.TEXT_NODE) {
+                resStr.append(str.substring(str.indexOf("?>") + 3));
+                resStr.append('\n');
+            } else {
+                resStr.append(str.substring(str.indexOf("?>") + 2));
+            }
         }
-        return resStr.toString();
+        return resStr.toString().trim();
     }
 
     public static String stdEvaluate(String query) throws Exception{
@@ -76,24 +78,6 @@ public class QueryProcessor {
         XQResultSequence result = exp.executeQuery();
 
         return result.getSequenceAsString(null);
-    }
-
-    public static boolean checkResult(String res1, String res2) {
-        StringBuilder r1 = new StringBuilder();
-        StringBuilder r2 = new StringBuilder();
-        for (int i=0; i<res1.length(); i++) {
-            char ch = res1.charAt(i);
-            if (ch != '\t' && ch != '\n' && ch!= '\r' && ch != ' ') {
-                r1.append(ch);
-            }
-        }
-        for (int i=0; i<res2.length(); i++) {
-            char ch = res2.charAt(i);
-            if (ch != '\t' && ch != '\n' && ch!= '\r' && ch != ' ') {
-                r2.append(ch);
-            }
-        }
-        return r1.toString().equals(r2.toString());
     }
 
     public static void main( String[] args ) throws  Exception{
