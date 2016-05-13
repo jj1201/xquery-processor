@@ -56,7 +56,7 @@ ret
 cond
     :   xq ('='|'eq') xq                        # XqValueEqualCond
     |   xq ('=='|'is') xq                       # XqIdEqualCond
-    |   'empty(' xq ')'                         # XqEmptyCond
+    |   'empty' '(' xq ')'                         # XqEmptyCond
     |   'some' some_cond                        # XqSomeCond
     |   '(' cond ')'                            # ParenthesisCond
     |   cond 'and' cond                         # AndCond
