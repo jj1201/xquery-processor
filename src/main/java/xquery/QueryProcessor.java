@@ -15,25 +15,28 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.xquery.*;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.StringWriter;
+import java.io.*;
 
 /**
- * TODO:
- *      ( xq ) cannot be recognized correctly
- *      WS between str_const is skipped
- *      XML transform is not correct when has external tags
+ * A Simple XQuery Processor
+ *      -- UCSD CSE 232B Implementation of Database Project
+ *
+ *  Read query from "test.xql" and output result to "result.xml"
+ *
+ * Chang Li, Jiajia Chen
+ * May. 12
  */
 
 public class QueryProcessor {
 
-    private static String test_query =
-            "for $a in doc(\"src/main/resource/test.xml\")/bookstore\n" +
-                    "let $a := $a/*" +
-                    "where some $b in $a satisfies empty($b/country)" +
-                    "return ( \"asd\", $a)";
+    public static boolean stdCheck = false;
 
+    /**
+     * Helper function. Represent a node as a String
+     * @param node org.w3c Node
+     * @return  the String representation of the input
+     * @throws Exception
+     */
     public static String nodeToString(Node node) throws Exception {
         StringWriter writer = new StringWriter();
         Transformer transformer = TransformerFactory.newInstance().newTransformer();
@@ -43,6 +46,14 @@ public class QueryProcessor {
         return writer.toString();
     }
 
+    /**
+     * Main function of query-processor. Input a String type query, return
+     * String type result.
+     *
+     * @param query Query in a string type
+     * @return  String representation of the query result
+     * @throws Exception
+     */
     public static String evaluate(String query) throws Exception {
 
         // Init ANTLR
@@ -70,6 +81,14 @@ public class QueryProcessor {
         return resStr.toString().trim();
     }
 
+    /**
+     * Get query result with Saxon Standard Library. Used to check the
+     * correctness of our own result.
+     *
+     * @param query Query in a String type
+     * @return String representation of the query result
+     * @throws Exception
+     */
     public static String stdEvaluate(String query) throws Exception{
 
         XQDataSource ds = new SaxonXQDataSource();
@@ -80,10 +99,17 @@ public class QueryProcessor {
         return result.getSequenceAsString(null);
     }
 
+    /**
+     * Main Function. Fetch query from "test.sql" file and process it. Print
+     * out the result as well as write it back into the "result.xml" file.
+     *
+     * @param args Not used yet
+     * @throws Exception
+     */
     public static void main( String[] args ) throws  Exception{
 
         // Read single query from file
-        File queryFile = new File("src/main/resource/test.xql");
+        File queryFile = new File("test.xql");
         byte[] queryBuf = new byte[4096];
         (new FileInputStream(queryFile)).read(queryBuf);
         String query = (new String(queryBuf)).trim();
@@ -92,12 +118,18 @@ public class QueryProcessor {
         String myRes = evaluate(query);
         System.out.println("---------Result--------\n" + myRes);
 
-        String stdRes = stdEvaluate(query);
-        if (myRes.equals(stdRes)) {
-            System.out.println("---------Success-------");
-        } else {
-            System.out.println("---------Failed--------");
-            System.out.println(stdRes);
+        File resultFile = new File("result.xml");
+        FileOutputStream outputStream = new FileOutputStream(resultFile);
+        outputStream.write(myRes.getBytes());
+
+        if (stdCheck) {
+            String stdRes = stdEvaluate(query);
+            if (myRes.equals(stdRes)) {
+                System.out.println("---------Saxon Check: Success-------");
+            } else {
+                System.out.println("---------Saxon Check: Failed--------");
+                System.out.println(stdRes);
+            }
         }
     }
 }

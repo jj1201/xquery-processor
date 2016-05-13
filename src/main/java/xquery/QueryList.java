@@ -3,13 +3,15 @@ package xquery;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.List;
 
 /**
- * Created by lichkkkk on 4/23/16.
+ * A warpped NodeList class. Use this to store node context during the
+ * processing. Except for common list-related methods, also add some
+ * set-related and tree-related methods.
+ *
+ * Created by Chang Li on 4/23/16.
  */
 public class QueryList implements NodeList, Iterable<Node> {
 

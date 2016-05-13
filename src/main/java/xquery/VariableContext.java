@@ -1,13 +1,17 @@
 package xquery;
 
-import org.antlr.v4.runtime.tree.RuleNode;
-
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 
 /**
- * Created by lichkkkk on 4/25/16.
+ * Class used to store bound variables in query. Core data structure is a
+ * stack. When new variables are bound, memorize their value in a hashMap and
+ * then push the map into the stack. The latest variables would overrode the
+ * older one automatically due to the nature of stack. When we want to remove
+ * last variable definition, just call a pop method.
+ *
+ * Created by Chang Li on 4/25/16.
  */
 public class VariableContext {
 

@@ -1,24 +1,21 @@
 package xquery;
 
-import com.sun.org.apache.xerces.internal.dom.DocumentImpl;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.RuleNode;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.w3c.dom.Text;
 import xquery.antlr.XQueryBaseVisitor;
 import xquery.antlr.XQueryParser;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.List;
 
 /**
- * Created by lichkkkk on 4/23/16.
+ * Overridden Visitor Class.
+ *
+ * Created by Chang Li on 4/23/16.
  */
 public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
 
