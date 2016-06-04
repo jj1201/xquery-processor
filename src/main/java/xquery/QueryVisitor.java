@@ -1,5 +1,6 @@
 package xquery;
 
+import com.sun.org.apache.xerces.internal.dom.DocumentImpl;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.RuleNode;
@@ -28,7 +29,7 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
     private LinkedList<QueryList> stack = new LinkedList<>();
     private VariableContext varContext= new VariableContext();
 
-    private Document doc;
+    private Document doc = new DocumentImpl();
 
     private void debug(ParserRuleContext ctx) {
         if (!debugOn) return;
@@ -73,7 +74,11 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
     @Override public QueryList visitVarAsXq(XQueryParser.VarAsXqContext ctx) {
         debug(ctx);
 
-        return varContext.getVar(ctx.var().getText());
+        QueryList res = new QueryList();
+        for (Node n : varContext.getVar(ctx.var().getText())) {
+            res.add(n);
+        }
+        return res;
     }
 
     @Override public QueryList visitStringAsXq(XQueryParser.StringAsXqContext ctx) {
@@ -131,7 +136,8 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
         QueryList subres = visitNode(stack.peek(), ctx.xq());
         Node resNode = doc.createElement(ctx.tag_name(0).getText());
         for (Node node : subres) {
-            resNode.appendChild(node);
+            Node iNode = resNode.getOwnerDocument().importNode(node, true);
+            resNode.appendChild(iNode);
         }
         QueryList res = new QueryList();
         res.add(resNode);
@@ -456,17 +462,18 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
         String fileName = ctx.file_name().getText();
         fileName = fileName.substring(1, fileName.length()-1); // delete quotes
         File xmlFile = new File(fileName);
+        Document currDoc = null;
         try {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             DocumentBuilder builder = factory.newDocumentBuilder();
-            doc = builder.parse(xmlFile);
+            currDoc = builder.parse(xmlFile);
         } catch (Exception e) {
             e.printStackTrace();
             throw new Error("Open file error.");
         }
 
         QueryList context = new QueryList();
-        context.add(doc);
+        context.add(currDoc);
 
         return visitNode(context, ctx.rp());
     }
@@ -477,17 +484,18 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
         String fileName = ctx.file_name().getText();
         fileName = fileName.substring(1, fileName.length()-1); // delete quotes
         File xmlFile = new File(fileName);
+        Document currDoc = null;
         try {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             DocumentBuilder builder = factory.newDocumentBuilder();
-            doc = builder.parse(xmlFile);
+            currDoc = builder.parse(xmlFile);
         } catch (Exception e) {
             e.printStackTrace();
             throw new Error("Open file error.");
         }
 
         QueryList context = new QueryList();
-        context.add(doc);
+        context.add(currDoc);
 
         return visitDescendant(context, ctx.rp());
     }
