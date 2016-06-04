@@ -1,7 +1,9 @@
 package xquery;
 
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.RuleNode;
+import org.antlr.v4.runtime.tree.TerminalNode;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import xquery.antlr.XQueryBaseVisitor;
@@ -10,7 +12,9 @@ import xquery.antlr.XQueryParser;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
+import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Overridden Visitor Class.
@@ -185,13 +189,81 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
         if (ctx.let() != null) { visitNode(stack.peek(), ctx.let()); }
         if (ctx.where() != null) {
             if (visitNode(stack.peek(), ctx.where()) == null) {
-                /* "where return null" means cond is false*/
                 return new QueryList();
             }
         }
         return visitNode(stack.peek(), ctx.ret());
     }
+/*
+    private void findVar(HashSet<String> vars, ParseTree ctx) {
+        if (ctx.getPayload() instanceof XQueryParser.VarContext) {
+            vars.add(ctx.getText());
+        } else {
+            for (int i=0; i<ctx.getChildCount(); i++) {
+                findVar(vars, ctx.getChild(i));
+            }
+        }
+    }
 
+    @Override public QueryList visitLwr(XQueryParser.LwrContext ctx) {
+        debug(ctx);
+
+        if (ctx.let() != null) { visitNode(stack.peek(), ctx.let()); }
+        if (ctx.where() != null) {
+
+            // Find all variables used in where Clause
+            HashSet<String> vars = new HashSet<>();
+            findVar(vars, ctx.where());
+            // If no variable is used, directly check
+            if (vars.size() == 0) {
+                if (visitNode(stack.peek(), ctx.where()) != null) {
+                    return visitNode(stack.peek(), ctx.ret());
+                } else {
+                    return new QueryList();
+                }
+            }
+
+            QueryList res = new QueryList();
+
+            // Use three array to simulate a nested "for" loop
+            String[] varList = vars.toArray(new String[0]);
+            int[] varCount = new int[varList.length];
+            int[] varCountMax = new int[varList.length];
+            for (int i=0; i<varCountMax.length; i++) {
+                varCountMax[i] = varContext.getVar(varList[i]).getLength();
+            }
+
+            // "for" loop
+            while (true) {
+                varContext.pushContext();
+                for (int i=0; i<varList.length; i++) {
+                    QueryList tmpContext = new QueryList();
+                    String varName = varList[i];
+                    tmpContext.add(varContext.getVar(varName).item(varCount[i]));
+                    varContext.putVar(varName, tmpContext);
+                }
+                if (visitNode(stack.peek(), ctx.where()) != null) {
+                    res.union(visitNode(stack.peek(), ctx.ret()));
+                }
+                varContext.popContext();
+                // Add varCount
+                int index = varCount.length - 1;
+                while (index >= 0 && varCount[index] == varCountMax[index]-1) {
+                    varCount[index] = 0;
+                    index --;
+                }
+                if (index < 0) {
+                    break;
+                } else {
+                    varCount[index] ++;
+                }
+            }
+            return res;
+        }
+
+        return visitNode(stack.peek(), ctx.ret());
+    }
+*/
     /*
      *  Visitor functions for "let" (letClause)
      *
@@ -497,17 +569,16 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
     @Override public QueryList visitAttName(XQueryParser.AttNameContext ctx ) {
         debug(ctx);
 
-        String attName = ctx.att_name().getText();
         QueryList res = new QueryList();
-        if(attName == null || attName.isEmpty())
-            return res;
+        String attName = ctx.att_name().getText();
         for(Node node : stack.peek()) {
-                if(node.hasAttributes())
-                    res.add(node.getAttributes().getNamedItem(attName));
+            if(node.hasAttributes()) {
+                Node att = node.getAttributes().getNamedItem(attName);
+                if (att != null) res.add(att);
+            }
         }
 
         return res;
-
     }
 
     @Override public QueryList visitParenthesisRp(XQueryParser.ParenthesisRpContext ctx) {
