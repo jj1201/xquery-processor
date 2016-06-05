@@ -7,9 +7,11 @@ import org.antlr.v4.runtime.tree.RuleNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import xquery.antlr.XQueryBaseVisitor;
 import xquery.antlr.XQueryParser;
 
+import javax.print.Doc;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
@@ -28,8 +30,6 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
 
     private LinkedList<QueryList> stack = new LinkedList<>();
     private VariableContext varContext= new VariableContext();
-
-    private Document doc = new DocumentImpl();
 
     private void debug(ParserRuleContext ctx) {
         if (!debugOn) return;
@@ -87,6 +87,7 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
         QueryList res = new QueryList();
         String str = ctx.str_const().getText();
         // Need to delete quotes here
+        Document doc = new DocumentImpl();
         res.add(doc.createTextNode(str.substring(1,str.length()-1)));
         return res;
     }
@@ -134,6 +135,7 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
         debug(ctx);
 
         QueryList subres = visitNode(stack.peek(), ctx.xq());
+        Document doc = new DocumentImpl();
         Node resNode = doc.createElement(ctx.tag_name(0).getText());
         for (Node node : subres) {
             Node iNode = resNode.getOwnerDocument().importNode(node, true);
@@ -306,7 +308,72 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
     @Override public QueryList visitRet(XQueryParser.RetContext ctx) {
         debug(ctx);
 
-        return visitNode(stack.peek(), ctx.xq());
+        QueryList res = visitNode(stack.peek(), ctx.xq());
+        return res;
+    }
+
+    /*
+     *  Join
+     *
+     */
+
+    @Override public QueryList visitJoinXq(XQueryParser.JoinXqContext ctx) {
+        debug(ctx);
+
+        QueryList res = visitNode(stack.peek(), ctx.join());
+        return res;
+    }
+
+    @Override public QueryList visitJoin(XQueryParser.JoinContext ctx) {
+        debug(ctx);
+
+        QueryList res = new QueryList();
+
+        QueryList res1 = visitNode(stack.peek(), ctx.xq(0));
+        QueryList res2 = visitNode(stack.peek(), ctx.xq(1));
+
+        for (Node n1 : res1) {
+            for (Node n2 : res2) {
+                NodeList nl1 = n1.getChildNodes();
+                NodeList nl2 = n2.getChildNodes();
+                boolean match = true;
+                for (int i=0; i<ctx.jlist(0).tag_name().size(); i++) {
+                    String attr1 = ctx.jlist(0).tag_name(i).getText();
+                    String attr2 = ctx.jlist(1).tag_name(i).getText();
+                    Node jn1 = null;
+                    for (int j=0; j<nl1.getLength(); j++) {
+                        if (nl1.item(j).getNodeName().equals(attr1)) {
+                            jn1 = nl1.item(j);
+                            break;
+                        }
+                    }
+                    Node jn2 = null;
+                    for (int j=0; j<nl2.getLength(); j++) {
+                        if (nl2.item(j).getNodeName().equals(attr2)) {
+                            jn2 = nl2.item(j);
+                            break;
+                        }
+                    }
+                    if (!jn1.getFirstChild().isEqualNode(jn2.getFirstChild())) {
+                        match = false;
+                        break;
+                    }
+                }
+                if (!match) continue;
+                Document doc = new DocumentImpl();
+                Node joinedNode = doc.createElement("tuple");
+                for (int j=0; j<nl1.getLength(); j++) {
+                    Node iNode = doc.importNode(nl1.item(j), true);
+                    joinedNode.appendChild(iNode);
+                }
+                for (int j=0; j<nl2.getLength(); j++) {
+                    Node iNode = doc.importNode(nl2.item(j), true);
+                    joinedNode.appendChild(iNode);
+                }
+                res.add(joinedNode);
+            }
+        }
+        return res;
     }
 
     /*

@@ -39,6 +39,13 @@ public interface XQueryVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitFlwrXq(XQueryParser.FlwrXqContext ctx);
 	/**
+	 * Visit a parse tree produced by the {@code JoinXq}
+	 * labeled alternative in {@link XQueryParser#xq}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitJoinXq(XQueryParser.JoinXqContext ctx);
+	/**
 	 * Visit a parse tree produced by the {@code XqSlashSlashRp}
 	 * labeled alternative in {@link XQueryParser#xq}.
 	 * @param ctx the parse tree
@@ -80,6 +87,18 @@ public interface XQueryVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitApAsXq(XQueryParser.ApAsXqContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link XQueryParser#join}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitJoin(XQueryParser.JoinContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link XQueryParser#jlist}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitJlist(XQueryParser.JlistContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link XQueryParser#var}.
 	 * @param ctx the parse tree

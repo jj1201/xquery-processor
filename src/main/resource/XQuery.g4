@@ -9,12 +9,21 @@ xq
     |   str_const                               # StringAsXq
     |   ap                                      # ApAsXq
     |   '(' xq ')'                              # ParenthesisXq
-    |   xq ',' xq                               # XqCommaXq
     |   xq '/' rp                               # XqSlashRp
     |   xq '//' rp                              # XqSlashSlashRp
     |   '<'tag_name'>''{'xq'}''</'tag_name'>'   # TagNameXq
     |   'for' flwr                              # FlwrXq
     |   let xq                                  # LetXq
+    |   xq ',' xq                               # XqCommaXq
+    |   join                                    # JoinXq
+    ;
+
+join
+    :   'join' '(' xq  ',' xq  ',' jlist ',' jlist ')'
+    ;
+
+jlist
+    :   '[' tag_name ( ',' tag_name)* ']'
     ;
 
 /* Var */

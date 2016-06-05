@@ -56,6 +56,18 @@ public interface XQueryListener extends ParseTreeListener {
 	 */
 	void exitFlwrXq(XQueryParser.FlwrXqContext ctx);
 	/**
+	 * Enter a parse tree produced by the {@code JoinXq}
+	 * labeled alternative in {@link XQueryParser#xq}.
+	 * @param ctx the parse tree
+	 */
+	void enterJoinXq(XQueryParser.JoinXqContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code JoinXq}
+	 * labeled alternative in {@link XQueryParser#xq}.
+	 * @param ctx the parse tree
+	 */
+	void exitJoinXq(XQueryParser.JoinXqContext ctx);
+	/**
 	 * Enter a parse tree produced by the {@code XqSlashSlashRp}
 	 * labeled alternative in {@link XQueryParser#xq}.
 	 * @param ctx the parse tree
@@ -127,6 +139,26 @@ public interface XQueryListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitApAsXq(XQueryParser.ApAsXqContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link XQueryParser#join}.
+	 * @param ctx the parse tree
+	 */
+	void enterJoin(XQueryParser.JoinContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link XQueryParser#join}.
+	 * @param ctx the parse tree
+	 */
+	void exitJoin(XQueryParser.JoinContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link XQueryParser#jlist}.
+	 * @param ctx the parse tree
+	 */
+	void enterJlist(XQueryParser.JlistContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link XQueryParser#jlist}.
+	 * @param ctx the parse tree
+	 */
+	void exitJlist(XQueryParser.JlistContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link XQueryParser#var}.
 	 * @param ctx the parse tree

@@ -72,6 +72,18 @@ class HelperVisitor extends XQueryReducedBaseVisitor<Object> {
 
         /* Replace variables in return */
         String retExpression = ctx.ret().getText().replace("$", "$tuple/");
+        StringBuilder builder = new StringBuilder(retExpression);
+        for (int i=builder.indexOf("$tuple/"), j=i+7; i != -1;
+             i=builder.indexOf("$tuple/", j+2)) {
+            for (j=i+7; j<builder.length(); j++) {
+                char ch = builder.charAt(j);
+                if (ch == ',' || ch == '}' || ch == '/') {
+                    break;
+                }
+            }
+            builder.insert(j, "/*");
+        }
+        retExpression = builder.toString();
 
         return "for $tuple in " + joinExpression + "\nreturn " + retExpression;
     }
@@ -106,6 +118,8 @@ class LabelTree {
         node.var = var;
         pnode.children.add(node);
         varMap.put(var, node);
+
+        asignJoinNum(node);
     }
 
     public void addJoin(String var1, String var2) {
@@ -114,10 +128,9 @@ class LabelTree {
         if (node1 == null || node2 == null) {
             throw new IllegalStateException();
         }
-        int num1 = getJoinNum(node1);
-        int num2 = getJoinNum(node2);
-        JoinNode joinNode1 = joinNodes.get(num1);
-        JoinNode joinNode2 = joinNodes.get(num2);
+
+        JoinNode joinNode1 = joinNodes.get(node1.joinNum);
+        JoinNode joinNode2 = joinNodes.get(node2.joinNum);
 
         JoinNode.addJoin(joinNode1, node1, joinNode2, node2);
     }
@@ -127,12 +140,12 @@ class LabelTree {
         if (node == null) {
             throw new IllegalStateException();
         }
-        int num = getJoinNum(node);
-        JoinNode joinNode = joinNodes.get(num);
+
+        JoinNode joinNode = joinNodes.get(node.joinNum);
         joinNode.addSelfCond(node, constant);
     }
 
-    public int getJoinNum(LabelNode node) {
+    public int asignJoinNum(LabelNode node) {
         if (node.joinNum == -1) {
             LinkedList<LabelNode> path = new LinkedList<>();
             LabelNode currNode = node;
@@ -218,18 +231,10 @@ class LabelTree {
         return newNode;
     }
 
-    public String replaceVar(String var) {
-        LabelNode node = varMap.get(var);
-        if (node.joinNum != -1) {
-
-        }
-        return null;
-    }
-
     @Override
     public String toString() {
         StringBuilder res = new StringBuilder();
- /*       res.append("LabelTree:\n");
+        res.append("LabelTree:\n");
         for (LabelNode n : varMap.values()) {
             res.append("\n" + n.var + " | " + n.relativePath + "\n");
             res.append("children: \n");
@@ -237,7 +242,7 @@ class LabelTree {
                 res.append(c.var + " | " + c.relativePath + "\n");
             }
         }
-  */      res.append("JoinNodes:\n");
+        res.append("JoinNodes:\n");
         for (JoinNode n : joinNodes) {
             res.append(n);
             res.append(n.getExpression());
@@ -266,6 +271,7 @@ class JoinNode {
     public LinkedList<LabelNode> varSet;
     public Map<JoinNode, Map<LabelNode, LabelNode>> joinTable;
     public Map<LabelNode, String> selfCondMap;
+    public Map<LabelNode, LabelNode> selfJoinMap;
     public String expression;
 
     public JoinNode(int joinNum) {
@@ -273,6 +279,7 @@ class JoinNode {
         varSet = new LinkedList<>();
         joinTable = new HashMap<>();
         selfCondMap = new HashMap<>();
+        selfJoinMap = new HashMap<>();
     }
 
     public String getExpression() {
@@ -283,10 +290,13 @@ class JoinNode {
                 exp.append("\t" + n.var + " in " + n.relativePath + ",\n");
             }
             exp.deleteCharAt(exp.length()-2);
-            if (selfCondMap.size() != 0) {
+            if (selfCondMap.size() != 0 || selfJoinMap.size() != 0) {
                 exp.append("where\n");
                 for (LabelNode n : selfCondMap.keySet()) {
                     exp.append("\t"+n.var+" eq "+selfCondMap.get(n)+",\n");
+                }
+                for (LabelNode n : selfJoinMap.keySet()) {
+                    exp.append("\t"+n.var+" eq "+selfJoinMap.get(n).var+",\n");
                 }
                 exp.deleteCharAt(exp.length()-2);
             }
@@ -332,22 +342,18 @@ class JoinNode {
 
     public static void addJoin(JoinNode n1, LabelNode v1, JoinNode n2, LabelNode v2) {
 
-        // n1
-        if (!n1.varSet.contains(v1)) {
-            throw new IllegalStateException();
-        }
-        if (!n1.joinTable.containsKey(n2)) {
-            n1.joinTable.put(n2, new HashMap<LabelNode, LabelNode>());
-        }
-        n1.joinTable.get(n2).put(v1, v2);
+        if (n1 == n2) {
+            n1.selfJoinMap.put(v1, v2);
+        } else {
+            if (!n1.joinTable.containsKey(n2)) {
+                n1.joinTable.put(n2, new HashMap<LabelNode, LabelNode>());
+            }
+            n1.joinTable.get(n2).put(v1, v2);
 
-        // n2
-        if (!n2.varSet.contains(v2)) {
-            throw new IllegalStateException();
+            if (!n2.joinTable.containsKey(n1)) {
+                n2.joinTable.put(n1, new HashMap<LabelNode, LabelNode>());
+            }
+            n2.joinTable.get(n1).put(v2, v1);
         }
-        if (!n2.joinTable.containsKey(n1)) {
-            n2.joinTable.put(n1, new HashMap<LabelNode, LabelNode>());
-        }
-        n2.joinTable.get(n1).put(v2, v1);
     }
 }
