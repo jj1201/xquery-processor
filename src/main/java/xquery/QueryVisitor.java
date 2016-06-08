@@ -15,6 +15,7 @@ import javax.print.Doc;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -324,6 +325,105 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
         return res;
     }
 
+    @Override public QueryList visitJoin(XQueryParser.JoinContext ctx) {
+        debug(ctx);
+
+        QueryList res = new QueryList();
+        QueryList res1 = visitNode(stack.peek(), ctx.xq(0));
+        QueryList res2 = visitNode(stack.peek(), ctx.xq(1));
+
+        // If conditional list is empty, directly join
+        if (ctx.jlist(0).tag_name() == null) {
+            for (Node n1 : res1) {
+                for (Node n2 : res2) {
+                    res.add(mergeTuple(n1, n2));
+                }
+            }
+            return res;
+        }
+
+        // Hash join
+        HashMap<String, List<Node>> map = new HashMap<>();
+
+        // Build the map
+        for (Node n1 : res1) {
+            StringBuilder keyBuilder = new StringBuilder();
+            for (int i = 0; i < ctx.jlist(0).tag_name().size(); i++) {
+                String attr1 = ctx.jlist(0).tag_name(i).getText();
+                Node attrNode = getNodeFromTuple(attr1, n1);
+                String attrString = attrNode.getTextContent();
+                keyBuilder.append(attrString);
+                //keyBuilder.append(getNodeKey(attrNode));
+            }
+            String key = keyBuilder.toString();
+            if (!map.containsKey(key)) {
+                map.put(key, new LinkedList<Node>());
+            }
+            // TODO: will there be duplicate ?
+            map.get(key).add(n1);
+        }
+
+        // Join
+        for (Node n2 :res2) {
+            StringBuilder keyBuilder = new StringBuilder();
+            for (int i = 0; i < ctx.jlist(1).tag_name().size(); i++) {
+                String attr2 = ctx.jlist(1).tag_name(i).getText();
+                Node attrNode = getNodeFromTuple(attr2, n2);
+                String attrString = attrNode.getTextContent();
+                keyBuilder.append(attrString);
+                //keyBuilder.append(getNodeKey(attrNode));
+            }
+            String key = keyBuilder.toString();
+            List<Node> n1List = map.get(key);
+            if (n1List != null) {
+                for (Node n1 : n1List) {
+                    res.add(mergeTuple(n1, n2));
+                }
+            }
+        }
+        return res;
+    }
+
+    private String getNodeKey(Node node) {
+        StringBuilder res = new StringBuilder();
+        res.append(node.getNodeName().hashCode());
+        res.append(node.getTextContent().hashCode());
+        if (node.hasChildNodes()) {
+            NodeList children = node.getChildNodes();
+            for (int i=0; i<children.getLength(); i++) {
+                res.append(getNodeKey(children.item(i)));
+            }
+        }
+        return res.toString();
+    }
+
+    private Node getNodeFromTuple(String attr, Node tuple) {
+        NodeList nodeList = tuple.getChildNodes();
+        for (int i=0; i<nodeList.getLength(); i++) {
+            if (nodeList.item(i).getNodeName().equals(attr)) {
+                return nodeList.item(i).getFirstChild();
+            }
+        }
+        throw new IllegalStateException();
+    }
+
+    private Node mergeTuple(Node tuple1, Node tuple2) {
+        Document doc = new DocumentImpl();
+        Node joinedNode = doc.createElement("tuple");
+        NodeList nl1 = tuple1.getChildNodes();
+        NodeList nl2 = tuple2.getChildNodes();
+        for (int j=0; j<nl1.getLength(); j++) {
+            Node iNode = doc.importNode(nl1.item(j), true);
+            joinedNode.appendChild(iNode);
+        }
+        for (int j=0; j<nl2.getLength(); j++) {
+            Node iNode = doc.importNode(nl2.item(j), true);
+            joinedNode.appendChild(iNode);
+        }
+        return joinedNode;
+    }
+
+    /*
     @Override public QueryList visitJoin(XQueryParser.JoinContext ctx) {
         debug(ctx);
 

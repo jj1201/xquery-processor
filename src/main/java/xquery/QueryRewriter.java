@@ -7,15 +7,17 @@ import xquery.antlr.*;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.util.*;
 
 /**
  * Take a non-core Xquery as input and output a rewritten xquery, which use
  * more efficient "Join" to replace normal FLWR expression.
  */
-public class QueryRewriter {
+public class  QueryRewriter {
 
     public static String rewrite(String query) {
+
         // Init ANTLR
         ANTLRInputStream inputStream = new ANTLRInputStream(query);
         XQueryReducedLexer lexer = new XQueryReducedLexer(inputStream);
@@ -25,17 +27,30 @@ public class QueryRewriter {
 
         // Visit
         HelperVisitor visitor = new HelperVisitor();
-        return (String) visitor.visit(tree);
+        String res = (String) visitor.visit(tree);
+
+        /* If the query don't need to be rewrite, retuen it self */
+        if (res == null) res = query;
+
+        return res;
     }
 
     public static void main(String[] args) throws Exception{
+
+        /* read query from file */
         File queryFile = new File("test.xql");
-        byte[] queryBuf = new byte[4096];
+        byte[] queryBuf = new byte[4096*2];
         (new FileInputStream(queryFile)).read(queryBuf);
         String query = (new String(queryBuf)).trim();
-        String res = rewrite(query);
 
+        /* Try to rewrite */
+        String res = rewrite(query);
         System.out.println(res);
+
+        /* Write result back to the file */
+        File resultFile = new File("rewrite.xql");
+        FileOutputStream outputStream = new FileOutputStream(resultFile);
+        outputStream.write(res.getBytes());
     }
 }
 
@@ -46,6 +61,9 @@ class HelperVisitor extends XQueryReducedBaseVisitor<Object> {
     @Override
     public String visitXq(XQueryReducedParser.XqContext ctx) {
 
+        /* No where, no rewrite */
+        if (ctx.cond() == null) return null;
+
         /* Construct the graph */
         for (int i=0; i<ctx.var().size(); i++) {
             String var = ctx.var(i).getText();
@@ -55,14 +73,15 @@ class HelperVisitor extends XQueryReducedBaseVisitor<Object> {
             tree.addVar(var, var2, path);
         }
 
-        /* Analyze the conditions */
+        /* Add conditions to join nodes */
         for (int i=0; i<ctx.cond().var().size(); i++) {
-            // Not const condition
             if (ctx.cond().var2(i).var() != null) {
+                // Not self const condition
                 String var1 = ctx.cond().var(i).getText();
                 String var2 = ctx.cond().var2(i).var().getText();
                 tree.addJoin(var1, var2);
             } else {
+                // Self const condition
                 String var = ctx.cond().var(i).getText();
                 String constant = ctx.cond().var2(i).constant().getText();
                 tree.addSelfCond(var, constant);
@@ -73,6 +92,7 @@ class HelperVisitor extends XQueryReducedBaseVisitor<Object> {
         /* Replace variables in return */
         String retExpression = ctx.ret().getText().replace("$", "$tuple/");
         StringBuilder builder = new StringBuilder(retExpression);
+        /* Add star after each variable in the tuple */
         for (int i=builder.indexOf("$tuple/"), j=i+7; i != -1;
              i=builder.indexOf("$tuple/", j+2)) {
             for (j=i+7; j<builder.length(); j++) {
@@ -89,13 +109,16 @@ class HelperVisitor extends XQueryReducedBaseVisitor<Object> {
     }
 }
 
+/**
+ * Label Tree for partition
+ */
 class LabelTree {
 
-    public LabelNode root;
+    private LabelNode root;
 
-    public HashMap<String, LabelNode> varMap;
+    private HashMap<String, LabelNode> varMap;
 
-    public ArrayList<JoinNode> joinNodes;
+    private ArrayList<JoinNode> joinNodes;
 
     public LabelTree() {
         root = new LabelNode();
@@ -106,12 +129,16 @@ class LabelTree {
 
     public void addVar(String var, String var2, String path) {
         if (varMap.containsKey(var)) {
-            throw new IllegalStateException();
+            throw new IllegalStateException("for has duplicate vars.");
         }
+
+        // Get the parent node
         LabelNode pnode = (var2 == null) ? root : varMap.get(var2);
         if (pnode == null) {
             throw new IllegalStateException();
         }
+
+        // Attach the new node under the parent node
         LabelNode node = new LabelNode();
         node.parent = pnode;
         node.relativePath = path;
@@ -119,9 +146,15 @@ class LabelTree {
         pnode.children.add(node);
         varMap.put(var, node);
 
+        // Assign this node to one Join Node
         asignJoinNum(node);
     }
 
+    /**
+     * Add one join condition between join nodes
+     * @param var1  var name of node 1 to join
+     * @param var2  var name of node 2 to join
+     */
     public void addJoin(String var1, String var2) {
         LabelNode node1 = varMap.get(var1);
         LabelNode node2 = varMap.get(var2);
@@ -135,6 +168,11 @@ class LabelTree {
         JoinNode.addJoin(joinNode1, node1, joinNode2, node2);
     }
 
+    /**
+     * Add one self condition to one one join node
+     * @param var   var name of the condition
+     * @param constant  const condition
+     */
     public void addSelfCond(String var, String constant) {
         LabelNode node = varMap.get(var);
         if (node == null) {
@@ -145,21 +183,32 @@ class LabelTree {
         joinNode.addSelfCond(node, constant);
     }
 
+    /**
+     * Assign one node to its join node
+     * @param node  node to assign
+     * @return  join number
+     */
     public int asignJoinNum(LabelNode node) {
         if (node.joinNum == -1) {
+
             LinkedList<LabelNode> path = new LinkedList<>();
             LabelNode currNode = node;
+
+            /* Go upwards, until find one assigned node or reach the root*/
             while (currNode != root && currNode.joinNum == -1) {
                 path.add(0, currNode);
                 currNode = currNode.parent;
             }
+
             if (currNode != root) {
+                /* If find one assigned node, then assign to the same node */
                 for (LabelNode n : path) {
                     JoinNode joinNode = joinNodes.get(currNode.joinNum);
                     joinNode.varSet.add(n);
                     n.joinNum = currNode.joinNum;
                 }
             } else {
+                /* If reach the root, then create a new join node and assign */
                 int num = joinNodes.size();
                 JoinNode joinNode = new JoinNode(num);
                 joinNodes.add(joinNode);
@@ -172,6 +221,10 @@ class LabelTree {
         return node.joinNum;
     }
 
+    /**
+     * Merge all join nodes in the join node list
+     * @return  Merged expression
+     */
     public String mergeAllJoinNode() {
         while (joinNodes.size() != 1) {
             JoinNode node1 = joinNodes.remove(0);
@@ -182,10 +235,19 @@ class LabelTree {
         return joinNodes.get(0).getExpression();
     }
 
+    /**
+     * Merge two join nodes and return the merged one
+     * @param n1    join node 1
+     * @param n2    join node 2
+     * @return      new merged node
+     */
     public JoinNode mergeJoinNode(JoinNode n1, JoinNode n2) {
+
+        /* Remove each other from the join table */
         Map<LabelNode, LabelNode> joinMap = n1.joinTable.remove(n2);
         n2.joinTable.remove(n1);
 
+        /* Add other join conditions to the new node's join map */
         JoinNode newNode = new JoinNode(n1.joinNum);
         for (JoinNode n : n1.joinTable.keySet()) {
             if (newNode.joinTable.containsKey(n)) {
@@ -202,6 +264,7 @@ class LabelTree {
             }
         }
 
+        /* Construct the join expression */
         StringBuilder res = new StringBuilder();
         res.append("join(\n");
         res.append(n1.getExpression());
@@ -209,23 +272,28 @@ class LabelTree {
         res.append(n2.getExpression());
         res.append(",\n");
 
+        /* Construct the join cond list expression */
         res.append("[");
-        for (LabelNode n : joinMap.keySet()) {
-            res.append(n.var.substring(1) + ", ");
+        if (joinMap != null) {
+            for (LabelNode n : joinMap.keySet()) {
+                res.append(n.var.substring(1) + ", ");
+            }
+            res.deleteCharAt(res.length() - 1);
+            res.deleteCharAt(res.length() - 1);
         }
-        res.deleteCharAt(res.length()-1);
-        res.deleteCharAt(res.length()-1);
         res.append("],\n");
 
         res.append("[");
-        for (LabelNode n : joinMap.keySet()) {
-            res.append(joinMap.get(n).var.substring(1) + ", ");
+        if (joinMap != null) {
+            for (LabelNode n : joinMap.keySet()) {
+                res.append(joinMap.get(n).var.substring(1) + ", ");
+            }
+            res.deleteCharAt(res.length() - 1);
+            res.deleteCharAt(res.length() - 1);
         }
-        res.deleteCharAt(res.length()-1);
-        res.deleteCharAt(res.length()-1);
         res.append("]");
-
         res.append(")\n");
+
         newNode.expression = res.toString();
 
         return newNode;
@@ -282,6 +350,10 @@ class JoinNode {
         selfJoinMap = new HashMap<>();
     }
 
+    /**
+     * Get experssion for one single join node
+     * @return  string of the expression
+     */
     public String getExpression() {
         if (expression == null) {
             StringBuilder exp = new StringBuilder();
@@ -313,6 +385,11 @@ class JoinNode {
         return expression;
     }
 
+    /**
+     * Add a self constant condition
+     * @param n     node
+     * @param constant  constant
+     */
     public void addSelfCond(LabelNode n, String constant) {
         selfCondMap.put(n, constant);
     }
@@ -340,6 +417,13 @@ class JoinNode {
         return res.toString();
     }
 
+    /**
+     * Add a join condition to two nodes
+     * @param n1    join node 1
+     * @param v1    label node 1
+     * @param n2    join node 2
+     * @param v2    label node 2
+     */
     public static void addJoin(JoinNode n1, LabelNode v1, JoinNode n2, LabelNode v2) {
 
         if (n1 == n2) {

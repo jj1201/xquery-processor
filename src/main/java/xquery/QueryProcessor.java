@@ -29,7 +29,7 @@ import java.io.*;
 
 public class QueryProcessor {
 
-    public static boolean stdCheck = true;
+    public static boolean stdCheck = false;
 
     /**
      * Helper function. Represent a node as a String

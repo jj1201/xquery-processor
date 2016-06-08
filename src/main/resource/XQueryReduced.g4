@@ -2,7 +2,7 @@
 grammar XQueryReduced;
 
 xq
-    :   'for' var 'in' path (',' var 'in' path )* 'where' cond 'return' ret
+    :   'for' var 'in' path (',' var 'in' path )* ('where' cond)? 'return' ret
     ;
 
 path
