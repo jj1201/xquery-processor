@@ -115,7 +115,11 @@ public class QueryProcessor {
         String query = (new String(queryBuf)).trim();
         System.out.println("---------Query--------\n" + query);
 
+        long startTime = System.nanoTime();
         String myRes = evaluate(query);
+        long endTime = System.nanoTime();
+
+        System.out.println("\nTime use : "+(endTime-startTime)/1000000+"ms");
         System.out.println("---------Result--------\n" + myRes);
 
         File resultFile = new File("result.xml");

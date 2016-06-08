@@ -343,7 +343,7 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
         }
 
         // Hash join
-        HashMap<String, List<Node>> map = new HashMap<>();
+        HashMap<Integer, List<Node>> map = new HashMap<>();
 
         // Build the map
         for (Node n1 : res1) {
@@ -351,16 +351,16 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
             for (int i = 0; i < ctx.jlist(0).tag_name().size(); i++) {
                 String attr1 = ctx.jlist(0).tag_name(i).getText();
                 Node attrNode = getNodeFromTuple(attr1, n1);
-                String attrString = attrNode.getTextContent();
-                keyBuilder.append(attrString);
-                //keyBuilder.append(getNodeKey(attrNode));
+                //String attrString = attrNode.getTextContent();
+                //keyBuilder.append(attrString);
+                keyBuilder.append(getNodeKey(attrNode));
             }
             String key = keyBuilder.toString();
-            if (!map.containsKey(key)) {
-                map.put(key, new LinkedList<Node>());
+            if (!map.containsKey(key.hashCode())) {
+                map.put(key.hashCode(), new LinkedList<Node>());
             }
             // TODO: will there be duplicate ?
-            map.get(key).add(n1);
+            map.get(key.hashCode()).add(n1);
         }
 
         // Join
@@ -369,12 +369,12 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
             for (int i = 0; i < ctx.jlist(1).tag_name().size(); i++) {
                 String attr2 = ctx.jlist(1).tag_name(i).getText();
                 Node attrNode = getNodeFromTuple(attr2, n2);
-                String attrString = attrNode.getTextContent();
-                keyBuilder.append(attrString);
-                //keyBuilder.append(getNodeKey(attrNode));
+                //String attrString = attrNode.getTextContent();
+                //keyBuilder.append(attrString);
+                keyBuilder.append(getNodeKey(attrNode));
             }
             String key = keyBuilder.toString();
-            List<Node> n1List = map.get(key);
+            List<Node> n1List = map.get(key.hashCode());
             if (n1List != null) {
                 for (Node n1 : n1List) {
                     res.add(mergeTuple(n1, n2));
