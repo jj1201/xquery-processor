@@ -32,6 +32,8 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
     private LinkedList<QueryList> stack = new LinkedList<>();
     private VariableContext varContext= new VariableContext();
 
+    private Document doc = new DocumentImpl();
+
     private void debug(ParserRuleContext ctx) {
         if (!debugOn) return;
         System.out.println("CTX: " + ctx.getClass().getName());
@@ -88,7 +90,6 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
         QueryList res = new QueryList();
         String str = ctx.str_const().getText();
         // Need to delete quotes here
-        Document doc = new DocumentImpl();
         res.add(doc.createTextNode(str.substring(1,str.length()-1)));
         return res;
     }
@@ -136,7 +137,6 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
         debug(ctx);
 
         QueryList subres = visitNode(stack.peek(), ctx.xq());
-        Document doc = new DocumentImpl();
         Node resNode = doc.createElement(ctx.tag_name(0).getText());
         for (Node node : subres) {
             Node iNode = resNode.getOwnerDocument().importNode(node, true);
@@ -203,76 +203,7 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
         }
         return visitNode(stack.peek(), ctx.ret());
     }
-/*
-    private void findVar(HashSet<String> vars, ParseTree ctx) {
-        if (ctx.getPayload() instanceof XQueryParser.VarContext) {
-            vars.add(ctx.getText());
-        } else {
-            for (int i=0; i<ctx.getChildCount(); i++) {
-                findVar(vars, ctx.getChild(i));
-            }
-        }
-    }
 
-    @Override public QueryList visitLwr(XQueryParser.LwrContext ctx) {
-        debug(ctx);
-
-        if (ctx.let() != null) { visitNode(stack.peek(), ctx.let()); }
-        if (ctx.where() != null) {
-
-            // Find all variables used in where Clause
-            HashSet<String> vars = new HashSet<>();
-            findVar(vars, ctx.where());
-            // If no variable is used, directly check
-            if (vars.size() == 0) {
-                if (visitNode(stack.peek(), ctx.where()) != null) {
-                    return visitNode(stack.peek(), ctx.ret());
-                } else {
-                    return new QueryList();
-                }
-            }
-
-            QueryList res = new QueryList();
-
-            // Use three array to simulate a nested "for" loop
-            String[] varList = vars.toArray(new String[0]);
-            int[] varCount = new int[varList.length];
-            int[] varCountMax = new int[varList.length];
-            for (int i=0; i<varCountMax.length; i++) {
-                varCountMax[i] = varContext.getVar(varList[i]).getLength();
-            }
-
-            // "for" loop
-            while (true) {
-                varContext.pushContext();
-                for (int i=0; i<varList.length; i++) {
-                    QueryList tmpContext = new QueryList();
-                    String varName = varList[i];
-                    tmpContext.add(varContext.getVar(varName).item(varCount[i]));
-                    varContext.putVar(varName, tmpContext);
-                }
-                if (visitNode(stack.peek(), ctx.where()) != null) {
-                    res.union(visitNode(stack.peek(), ctx.ret()));
-                }
-                varContext.popContext();
-                // Add varCount
-                int index = varCount.length - 1;
-                while (index >= 0 && varCount[index] == varCountMax[index]-1) {
-                    varCount[index] = 0;
-                    index --;
-                }
-                if (index < 0) {
-                    break;
-                } else {
-                    varCount[index] ++;
-                }
-            }
-            return res;
-        }
-
-        return visitNode(stack.peek(), ctx.ret());
-    }
-*/
     /*
      *  Visitor functions for "let" (letClause)
      *
@@ -306,10 +237,12 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
      *
      */
 
+    public static long timeForRet = 0;
     @Override public QueryList visitRet(XQueryParser.RetContext ctx) {
         debug(ctx);
-
+        long start = System.nanoTime();
         QueryList res = visitNode(stack.peek(), ctx.xq());
+        timeForRet += (System.nanoTime() - start);
         return res;
     }
 
@@ -351,15 +284,12 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
             for (int i = 0; i < ctx.jlist(0).tag_name().size(); i++) {
                 String attr1 = ctx.jlist(0).tag_name(i).getText();
                 Node attrNode = getNodeFromTuple(attr1, n1);
-                //String attrString = attrNode.getTextContent();
-                //keyBuilder.append(attrString);
                 keyBuilder.append(getNodeKey(attrNode));
             }
             String key = keyBuilder.toString();
             if (!map.containsKey(key.hashCode())) {
                 map.put(key.hashCode(), new LinkedList<Node>());
             }
-            // TODO: will there be duplicate ?
             map.get(key.hashCode()).add(n1);
         }
 
@@ -369,8 +299,6 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
             for (int i = 0; i < ctx.jlist(1).tag_name().size(); i++) {
                 String attr2 = ctx.jlist(1).tag_name(i).getText();
                 Node attrNode = getNodeFromTuple(attr2, n2);
-                //String attrString = attrNode.getTextContent();
-                //keyBuilder.append(attrString);
                 keyBuilder.append(getNodeKey(attrNode));
             }
             String key = keyBuilder.toString();
@@ -385,15 +313,10 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
     }
 
     private String getNodeKey(Node node) {
+        long start = System.nanoTime();
         StringBuilder res = new StringBuilder();
         res.append(node.getNodeName().hashCode());
         res.append(node.getTextContent().hashCode());
-        if (node.hasChildNodes()) {
-            NodeList children = node.getChildNodes();
-            for (int i=0; i<children.getLength(); i++) {
-                res.append(getNodeKey(children.item(i)));
-            }
-        }
         return res.toString();
     }
 
@@ -407,8 +330,9 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
         throw new IllegalStateException();
     }
 
+
     private Node mergeTuple(Node tuple1, Node tuple2) {
-        Document doc = new DocumentImpl();
+
         Node joinedNode = doc.createElement("tuple");
         NodeList nl1 = tuple1.getChildNodes();
         NodeList nl2 = tuple2.getChildNodes();
@@ -420,60 +344,8 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
             Node iNode = doc.importNode(nl2.item(j), true);
             joinedNode.appendChild(iNode);
         }
+
         return joinedNode;
-    }
-
-    /*
-    @Override public QueryList visitJoin(XQueryParser.JoinContext ctx) {
-        debug(ctx);
-
-        QueryList res = new QueryList();
-
-        QueryList res1 = visitNode(stack.peek(), ctx.xq(0));
-        QueryList res2 = visitNode(stack.peek(), ctx.xq(1));
-
-        for (Node n1 : res1) {
-            for (Node n2 : res2) {
-                NodeList nl1 = n1.getChildNodes();
-                NodeList nl2 = n2.getChildNodes();
-                boolean match = true;
-                for (int i=0; i<ctx.jlist(0).tag_name().size(); i++) {
-                    String attr1 = ctx.jlist(0).tag_name(i).getText();
-                    String attr2 = ctx.jlist(1).tag_name(i).getText();
-                    Node jn1 = null;
-                    for (int j=0; j<nl1.getLength(); j++) {
-                        if (nl1.item(j).getNodeName().equals(attr1)) {
-                            jn1 = nl1.item(j);
-                            break;
-                        }
-                    }
-                    Node jn2 = null;
-                    for (int j=0; j<nl2.getLength(); j++) {
-                        if (nl2.item(j).getNodeName().equals(attr2)) {
-                            jn2 = nl2.item(j);
-                            break;
-                        }
-                    }
-                    if (!jn1.getFirstChild().isEqualNode(jn2.getFirstChild())) {
-                        match = false;
-                        break;
-                    }
-                }
-                if (!match) continue;
-                Document doc = new DocumentImpl();
-                Node joinedNode = doc.createElement("tuple");
-                for (int j=0; j<nl1.getLength(); j++) {
-                    Node iNode = doc.importNode(nl1.item(j), true);
-                    joinedNode.appendChild(iNode);
-                }
-                for (int j=0; j<nl2.getLength(); j++) {
-                    Node iNode = doc.importNode(nl2.item(j), true);
-                    joinedNode.appendChild(iNode);
-                }
-                res.add(joinedNode);
-            }
-        }
-        return res;
     }
 
     /*
@@ -903,8 +775,5 @@ public class QueryVisitor extends XQueryBaseVisitor<QueryList> {
         }
         res = stack.peek().subtract(res);
         return res;
-
     }
-
-
 }

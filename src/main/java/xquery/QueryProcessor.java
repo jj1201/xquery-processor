@@ -120,7 +120,7 @@ public class QueryProcessor {
         long endTime = System.nanoTime();
 
         System.out.println("\nTime use : "+(endTime-startTime)/1000000+"ms");
-        System.out.println("---------Result--------\n" + myRes);
+        //System.out.println("---------Result--------\n" + myRes);
 
         File resultFile = new File("result.xml");
         FileOutputStream outputStream = new FileOutputStream(resultFile);

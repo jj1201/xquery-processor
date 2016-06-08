@@ -25,6 +25,13 @@ public class QueryList implements NodeList, Iterable<Node> {
         nodeList = new LinkedList<>();
     }
 
+    public QueryList(NodeList nl) {
+        this();
+        for (int i=0; i<nl.getLength(); i++) {
+            nodeList.add(nl.item(i));
+        }
+    }
+
     /**
      * Core Helper Methods
      */

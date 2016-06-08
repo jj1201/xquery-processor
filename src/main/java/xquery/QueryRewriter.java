@@ -14,7 +14,7 @@ import java.util.*;
  * Take a non-core Xquery as input and output a rewritten xquery, which use
  * more efficient "Join" to replace normal FLWR expression.
  */
-public class  QueryRewriter {
+public class QueryRewriter {
 
     public static String rewrite(String query) {
 
@@ -228,8 +228,17 @@ class LabelTree {
     public String mergeAllJoinNode() {
         while (joinNodes.size() != 1) {
             JoinNode node1 = joinNodes.remove(0);
-            JoinNode node2 = joinNodes.remove(0);
-            JoinNode newNode = mergeJoinNode(node1, node2);
+            JoinNode node12 = null;
+            if (node1.joinTable.keySet().size() != 0) {
+                node12 = node1.joinTable.keySet().iterator().next();
+            /*JoinNode node2 = */
+                if (!joinNodes.remove(node12)) {
+                    throw new IllegalStateException();
+                }
+            } else {
+                node12 = joinNodes.remove(0);
+            }
+            JoinNode newNode = mergeJoinNode(node1, node12);
             joinNodes.add(0, newNode);
         }
         return joinNodes.get(0).getExpression();
@@ -262,6 +271,12 @@ class LabelTree {
             } else {
                 newNode.joinTable.put(n, n2.joinTable.get(n));
             }
+        }
+        for (JoinNode n : joinNodes) {
+            Map<LabelNode, LabelNode> mapToN1 = n.joinTable.remove(n1);
+            Map<LabelNode, LabelNode> mapToN2 = n.joinTable.remove(n2);
+            if (mapToN1 != null) n.joinTable.put(newNode, mapToN1);
+            if (mapToN2 != null) n.joinTable.put(newNode, mapToN2);
         }
 
         /* Construct the join expression */
