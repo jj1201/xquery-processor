@@ -72,7 +72,7 @@ public class QueryProcessor {
         for (Node node : res) {
             String str = nodeToString(node);
             if (node.getNodeType() != Node.TEXT_NODE) {
-                resStr.append(str.substring(str.indexOf("?>") + 3));
+                resStr.append(str.substring(str.indexOf("?>") + 2));
                 resStr.append('\n');
             } else {
                 resStr.append(str.substring(str.indexOf("?>") + 2));
@@ -108,24 +108,34 @@ public class QueryProcessor {
      */
     public static void main( String[] args ) throws  Exception{
 
+        if (args.length != 2) {
+            System.out.println("Please indicate input and output file path.");
+            return;
+        }
+        String input = args[0];
+        String output = args[1];
+
         // Read single query from file
-        File queryFile = new File("test.xql");
+        File queryFile = new File(input);
         byte[] queryBuf = new byte[4096];
         (new FileInputStream(queryFile)).read(queryBuf);
         String query = (new String(queryBuf)).trim();
         System.out.println("---------Query--------\n" + query);
 
+        // Processing and Timing
         long startTime = System.nanoTime();
         String myRes = evaluate(query);
         long endTime = System.nanoTime();
 
-        System.out.println("\nTime use : "+(endTime-startTime)/1000000+"ms");
-        //System.out.println("---------Result--------\n" + myRes);
+        System.out.println("---------Result--------\n" + myRes);
+        System.out.println("\n----Time use : "+(endTime-startTime)/1000000+"ms----");
 
-        File resultFile = new File("result.xml");
+        // Write result into file
+        File resultFile = new File(output);
         FileOutputStream outputStream = new FileOutputStream(resultFile);
         outputStream.write(myRes.getBytes());
 
+        // If stdCheck == True, check the result with Saxon's result
         if (stdCheck) {
             String stdRes = stdEvaluate(query);
             if (myRes.equals(stdRes)) {
