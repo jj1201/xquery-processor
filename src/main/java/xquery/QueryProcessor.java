@@ -19,9 +19,6 @@ import java.io.*;
 
 /**
  * A Simple XQuery Processor
- *      -- UCSD CSE 232B Implementation of Database Project
- *
- *  Read query from "test.xql" and output result to "result.xml"
  *
  * Chang Li, Jiajia Chen
  * May. 12

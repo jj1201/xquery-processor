@@ -1,7 +1,7 @@
 
 JAVAFILES = src/main/java/xquery/*.java src/main/java/xquery/antlr/*.java
 
-JAVALIB = /usr/local/lib/antlr-4.5-complete.jar:/usr/local/lib/saxon9-xqj.jar:/usr/local/lib/javax.xml-1.3.4.jar
+JAVALIB = /usr/local/lib/antlr-4.5-complete.jar:/usr/local/lib/saxon9-xqj.jar
 
 .PHONY: all
 all:
@@ -14,7 +14,7 @@ test:
 	java -cp $(JAVALIB):bin/ xquery.QueryProcessor test/test1.xql out/output.xml
 
 .PHONY: join-test
-join-test:
+rewrite-test:
 	mkdir -p out
 	java -cp $(JAVALIB):bin/ xquery.QueryRewriter test/test2.xql out/rewritten.xql
 
