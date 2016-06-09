@@ -37,18 +37,30 @@ public class QueryRewriter {
 
     public static void main(String[] args) throws Exception{
 
+        if (args.length != 2) {
+            System.out.println("Please indicates input and output path");
+            return;
+        }
+        String input = args[0];
+        String output = args[1];
+
         /* read query from file */
-        File queryFile = new File("test.xql");
+        File queryFile = new File(input);
         byte[] queryBuf = new byte[4096*2];
         (new FileInputStream(queryFile)).read(queryBuf);
         String query = (new String(queryBuf)).trim();
 
+        System.out.println("------Original Query------");
+        System.out.println(query);
+
         /* Try to rewrite */
         String res = rewrite(query);
+        
+        System.out.println("------Rewritten Query-----");
         System.out.println(res);
 
         /* Write result back to the file */
-        File resultFile = new File("rewrite.xql");
+        File resultFile = new File(output);
         FileOutputStream outputStream = new FileOutputStream(resultFile);
         outputStream.write(res.getBytes());
     }
