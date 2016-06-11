@@ -13,7 +13,7 @@ test:
 	mkdir -p out
 	java -cp $(JAVALIB):bin/ xquery.QueryProcessor test/test1.xql out/output.xml
 
-.PHONY: join-test
+.PHONY: rewrite-test
 rewrite-test:
 	mkdir -p out
 	java -cp $(JAVALIB):bin/ xquery.QueryRewriter test/test2.xql out/rewritten.xql
